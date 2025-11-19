@@ -1,6 +1,6 @@
 import { Editor, OnMount } from "@monaco-editor/react";
 import { PLAYGROUND_RIGHT_TABS, PlaygroundRightTabType } from "../types";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { PlaygroundContext } from "../context/playground-context";
 import SessionDataTab from "./session-data-tab";
 import { ExecutionResults } from "./extras/terminal";
@@ -54,7 +54,7 @@ function GetRightSideContent({
 	actionId: string | undefined;
 }) {
 	const playgroundContext = useContext(PlaygroundContext);
-
+	const [sessionData, setSessionData] = useState<any>({});
 	// const [savedMeta, setSaveMeta] = useState<any>({});
 	const savedMetaRef = useRef<any>({}); // Add this ref
 
@@ -66,6 +66,8 @@ function GetRightSideContent({
 		// setSaveMeta(meta);
 		savedMetaRef.current = meta; // Update ref whenever savedMeta changes
 		console.log("updated savedMeta", meta);
+
+		getSessionData().then((data) => setSessionData(data));
 	}, [playgroundContext.config, playgroundContext.activeApi]);
 
 	const index =
@@ -77,7 +79,7 @@ function GetRightSideContent({
 			(f) => f.action_id === actionId
 		)?.payload || undefined;
 
-	const getSessionData = () => {
+	const getSessionData = async () => {
 		try {
 			if (!playgroundContext.config) {
 				return JSON.stringify(
@@ -91,7 +93,8 @@ function GetRightSideContent({
 			}
 
 			const mockRunner = new MockRunner(playgroundContext.config as any);
-			const sessionData = mockRunner.getSessionDataUpToStep(index);
+			const sessionData = await mockRunner.getSessionDataUpToStep(index);
+			console.log("Session Data:", sessionData);
 			return JSON.stringify(sessionData, null, 2);
 		} catch (error: any) {
 			const errorInfo = {
@@ -191,7 +194,7 @@ function GetRightSideContent({
 					onMount={handleOnMount}
 					height="100%"
 					language="json"
-					value={getSessionData()}
+					value={sessionData}
 					options={{
 						padding: { top: 16, bottom: 16 },
 						fontSize: 16,

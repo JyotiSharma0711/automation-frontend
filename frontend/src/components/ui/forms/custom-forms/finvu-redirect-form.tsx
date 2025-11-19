@@ -21,7 +21,7 @@ export default function FinvuRedirectForm({
   const [pollCount, setPollCount] = useState<number>(0);
   
   // Use refs to prevent page refresh
-  const pollingIntervalRef = useRef<number | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const finvuWindowRef = useRef<Window | null>(null);
   const isPollingRef = useRef<boolean>(false);
   const hasCompletedRef = useRef<boolean>(false);

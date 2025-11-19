@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { GoWorkflow } from "react-icons/go";
+import { GoCodespaces, GoWorkflow } from "react-icons/go";
 import { MdSchema } from "react-icons/md";
 import { fetchFormFieldData } from "../../utils/request-utils";
 import { FaChevronDown, FaUserPlus } from "react-icons/fa6";
@@ -12,7 +12,7 @@ interface Feature {
 	description: string;
 	path: string;
 	icon: JSX.Element;
-	analytics?: GAEvent
+	analytics?: GAEvent;
 }
 
 const features: Feature[] = [
@@ -27,7 +27,7 @@ const features: Feature[] = [
 			category: "HOME",
 			action: "Clicked in schema validation",
 			label: "SCHEMA_VALIDATION",
-		  },
+		},
 	},
 	{
 		title: "Scenario Testing",
@@ -40,16 +40,16 @@ const features: Feature[] = [
 			category: "HOME",
 			action: "Clicked in scenario testing",
 			label: "SCENARIO_TESTING",
-		  },
+		},
 	},
-	// {
-	// 	title: "Protocol Playground",
-	// 	subtitle: "Customize and Experiment with Transaction Flows",
-	// 	description:
-	// 		"Interactively design and test your mock transaction flows using javascript.",
-	// 	path: "/playground",
-	// 	icon: <GoCodespaces className="text-sky-600 text-4xl" />,
-	// },
+	{
+		title: "Protocol Playground",
+		subtitle: "Customize and Experiment with Transaction Flows",
+		description:
+			"Interactively design and test your mock transaction flows using javascript.",
+		path: "/playground",
+		icon: <GoCodespaces className="text-sky-600 text-4xl" />,
+	},
 	{
 		title: "Seller Onboarding",
 		subtitle: "Quick & Easy Seller Registration",
@@ -91,10 +91,10 @@ const Features: React.FC = () => {
 							key={index}
 							className="group bg-white border border-sky-100 rounded-2xl hover:border-sky-300 hover:shadow-xl hover:shadow-sky-100/50 transition-all duration-300 cursor-pointer p-8 relative overflow-hidden"
 							onClick={() => {
-								if(feature?.analytics) {
-									trackEvent(feature.analytics)
+								if (feature?.analytics) {
+									trackEvent(feature.analytics);
 								}
-								navigate(feature.path)
+								navigate(feature.path);
 							}}
 						>
 							{/* Enhanced hover gradient overlay */}

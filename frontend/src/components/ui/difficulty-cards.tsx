@@ -70,13 +70,14 @@ const DifficultyCards = ({ difficulty_cache, sessionId }: IProps) => {
 		}
 	};
 	return (
-		<button className="w-full bg-gray-100 border backdrop-blur-md rounded-md p-2 shadow-sm flex flex-col gap-4 hover:bg-sky-50">
+		<button className="w-full bg-gray-100 border backdrop-blur-md rounded-md p-4 shadow-sm flex flex-col gap-4 hover:bg-sky-50">
 			{/* Header with Button */}
 			<div
 				className="flex flex-row justify-between items-center cursor-pointer"
 				onClick={() => setIsOpen(!isOpen)}
 			>
-				<div className="text-md font-bold text-sky-700 mt-2 flex">
+				<div className="text-md font-bold text-sky-700 mt-2 flex gap-2">
+					<div className="w-1 h-5 bg-sky-700 rounded-full"></div>
 					Flow Settings
 				</div>
 

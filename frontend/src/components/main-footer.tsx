@@ -5,19 +5,26 @@ import { trackEvent } from "../utils/analytics";
 const Footer = () => {
 	const footerLinks = {
 		company: [
-			{ name: "About ONDC", href: "https://ondc.org/", analytics: {category: "FOOTER", action: "Clicked on 'About ONDC'"} },
+			{
+				name: "About ONDC",
+				href: "https://ondc.org/",
+				analytics: { category: "FOOTER", action: "Clicked on 'About ONDC'" },
+			},
 			// { name: "Contact Us", href: "#" },
 		],
 		developers: [
 			{
 				name: "API Documentation",
 				href: "https://github.com/ONDC-Official/automation-framework",
-				analytics: {category: "FOOTER", action: "Clicked on 'API Documentation'"}
+				analytics: {
+					category: "FOOTER",
+					action: "Clicked on 'API Documentation'",
+				},
 			},
 			{
 				name: "SDKs & Tools",
 				href: "https://github.com/ONDC-Official/automation-validation-compiler",
-				analytics: {category: "FOOTER", action: "Clicked on 'SDKs & Tools'"}
+				analytics: { category: "FOOTER", action: "Clicked on 'SDKs & Tools'" },
 			},
 			// { name: "Sandbox Environment", href: "#" },
 		],
@@ -27,11 +34,15 @@ const Footer = () => {
 			{
 				name: "Bug Reports",
 				href: "https://github.com/ONDC-Official/automation-framework/issues",
-				analytics: {category: "FOOTER", action: "Clicked on 'Bug Reports'"}
+				analytics: { category: "FOOTER", action: "Clicked on 'Bug Reports'" },
 			},
 		],
 		quickLinks: [
-			{ name: "Join ONDC", href: "https://ondc.org/ondc-how-to-join/", analytics: {category: "FOOTER", action: "Clicked on 'Join ONDC'"} },
+			{
+				name: "Join ONDC",
+				href: "https://ondc.org/ondc-how-to-join/",
+				analytics: { category: "FOOTER", action: "Clicked on 'Join ONDC'" },
+			},
 		],
 	};
 
@@ -40,18 +51,18 @@ const Footer = () => {
 			name: "LinkedIn",
 			href: "https://in.linkedin.com/company/open-network-for-digital-commerce",
 			icon: <BsLinkedin />,
-			analytics: {category: "FOOTER", action: "Clicked on 'LinkedIn'"}
+			analytics: { category: "FOOTER", action: "Clicked on 'LinkedIn'" },
 		},
 		{
 			name: "GitHub",
 			href: "https://github.com/ONDC-Official",
 			icon: <BsGithub />,
-			analytics: {category: "FOOTER", action: "GitHub'"}
+			analytics: { category: "FOOTER", action: "GitHub'" },
 		},
 	];
 
 	return (
-		<footer className="bg-gray-800 text-white mt-5">
+		<footer className="bg-gray-800 text-white mt-auto">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 				{/* Main footer content */}
 				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">

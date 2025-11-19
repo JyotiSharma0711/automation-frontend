@@ -27,19 +27,8 @@ interface SessionContextProps {
 	setSideView: React.Dispatch<React.SetStateAction<any>>;
 	metadata: any;
 	setMetadata: React.Dispatch<React.SetStateAction<any>>;
-	// custom flow variables
-	cfSessionId: string;
-	setcfSessionId: Dispatch<SetStateAction<string>>;
-	cfActiveFlowId: string | null;
-	setcfActiveFlowId?: Dispatch<SetStateAction<string | null>>;
-	cfSessionData: SessionCache | null | undefined;
-	setcfSessionData?: Dispatch<SetStateAction<SessionCache | null>>;
-	cfSelectedTab: "Request" | "Response";
-	setcfSelectedTab?: Dispatch<SetStateAction<"Request" | "Response">>;
-	cfRequestData: any;
-	setcfRequestData: Dispatch<SetStateAction<any>>;
-	cfResponseData: any;
-	setcfResponseData: Dispatch<SetStateAction<any>>;
+	setActiveCallClickedToggle: React.Dispatch<React.SetStateAction<boolean>>;
+	activeCallClickedToggle: boolean,
 }
 
 export const SessionContext = createContext<SessionContextProps | undefined>(
@@ -55,15 +44,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 	>("Request");
 	const [requestData, setRequestData] = useState<any>(null);
 	const [responseData, setResponseData] = useState<any>(null);
-	// custom flow state
-	const [cfSessionId, setcfSessionId] = useState<string>("");
-	const [cfActiveFlowId, setcfActiveFlowId] = useState<string | null>(null);
-	const [cfSessionData, setcfSessionData] = useState<SessionCache | null>(null);
-	const [cfSelectedTab, setcfSelectedTab] = useState<"Request" | "Response">(
-		"Request"
-	);
-	const [cfRequestData, setcfRequestData] = useState<any>(null);
-	const [cfResponseData, setcfResponseData] = useState<any>(null);
+	const [activeCallClickedToggle, setActiveCallClickedToggle] = useState<boolean>(false)
 	const [sideView, setSideView] = useState<any>(null);
 	const [metadata, setMetadata] = useState<any>(null);
 
@@ -80,25 +61,14 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 				setSelectedTab,
 				requestData,
 				setRequestData,
+				setActiveCallClickedToggle,
+				activeCallClickedToggle,
 				responseData,
 				setResponseData,
 				sideView, // 👈 optional if you also want to read it
 				setSideView, // 👈 fixes missing prop
 				metadata, // 👈 optional
 				setMetadata,
-
-				cfSessionId,
-				setcfSessionId,
-				cfActiveFlowId,
-				setcfActiveFlowId,
-				cfSessionData,
-				setcfSessionData,
-				cfSelectedTab,
-				setcfSelectedTab,
-				cfRequestData,
-				setcfRequestData,
-				cfResponseData,
-				setcfResponseData,
 			}}
 		>
 			{children}

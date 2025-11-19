@@ -72,3 +72,9 @@ export interface SequenceCardProps {
 	step: State;
 	pair?: State;
 }
+
+export interface FlowInDB {
+	id: string;
+	status: "PENDING" | "COMPLETED";
+	payloads?: string[];
+  }

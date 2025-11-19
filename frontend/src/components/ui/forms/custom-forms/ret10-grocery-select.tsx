@@ -12,6 +12,7 @@ export default function Ret10GrocerySelect({
 }) {
 	const [isPayloadEditorActive, setIsPayloadEditorActive] = useState(false);
 	const [errorWhilePaste, setErrorWhilePaste] = useState("");
+	const [isDataPasted, setIsDataPasted] = useState(false)
 
 	const { control, handleSubmit, watch, register } = useForm({
 		defaultValues: {
@@ -67,6 +68,7 @@ export default function Ret10GrocerySelect({
 				.flatMap((p: any) => p.offers || [])
 				.map((offer: any) => offer.id);
 			setOfferOptions(offers);
+			setIsDataPasted(true)
 		} catch (err) {
 			setErrorWhilePaste("Invalid payload structure.");
 			toast.error("Invalid payload structure. Please check the pasted data.");
@@ -121,6 +123,18 @@ export default function Ret10GrocerySelect({
 				<FaRegPaste size={14} />
 			</button>
 
+			{
+			!isDataPasted ? 
+			<div className="flex items-start gap-3 border-l-4 border-blue-500 bg-blue-50 p-3 rounded">
+				<p className="text-sm text-blue-800 flex items-center gap-1">
+					Paste <strong>on_search</strong> payload using the button
+					<span className="p-2 border rounded-full hover:bg-gray-100">
+					<FaRegPaste size={14} />
+					</span>
+					to select items
+				</p>
+			</div>
+			:
 			<form
 				onSubmit={handleSubmit(onSubmit)}
 				className="space-y-4 h-[500px] overflow-y-scroll p-4"
@@ -260,6 +274,7 @@ export default function Ret10GrocerySelect({
 					Submit
 				</button>
 			</form>
+			}
 		</div>
 	);
 }

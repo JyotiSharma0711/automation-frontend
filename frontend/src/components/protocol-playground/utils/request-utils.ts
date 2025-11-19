@@ -1,6 +1,7 @@
 import {
 	convertToFlowConfig,
 	MockPlaygroundConfigType,
+	createOptimizedMockConfig,
 } from "@ondc/automation-mock-runner";
 import { SessionCache } from "../../../types/session-types";
 import axios from "axios";
@@ -40,7 +41,7 @@ export async function createFlowSessionWithPlayground(
 		const finalUrl = `${backendUrl}/sessions/playground`;
 		const body = {
 			sessionData: newSession,
-			playgroundConfig: config,
+			playgroundConfig: await createOptimizedMockConfig(config),
 		};
 		const res = await axios.post(finalUrl, body);
 		return res.data.sessionId;

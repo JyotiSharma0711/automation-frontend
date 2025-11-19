@@ -4,12 +4,14 @@ import { PlaygroundContext } from "./context/playground-context";
 import PlaygroundPage from "./playground-page";
 import { createInitialMockConfig } from "@ondc/automation-mock-runner";
 import axios from "axios";
+import { SavedConfigsModal } from "./ui/saved-configs-modal";
 
 export default function GetPlaygroundComponent() {
 	const { config, setCurrentConfig } = useContext(PlaygroundContext);
 	const [domain, setDomain] = useState("");
 	const [version, setVersion] = useState("");
 	const [flowId, setFlowId] = useState("");
+	const [showSavedConfigs, setShowSavedConfigs] = useState(false);
 	const [dynamicList, setDynamicList] = useState<{
 		domain: any[];
 		version: any[];
@@ -53,37 +55,78 @@ export default function GetPlaygroundComponent() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-sky-100 via-white to-blue-50 flex justify-center p-4 relative overflow-hidden">
-			{/* Animated background circles */}
-			<div className="absolute top-20 left-10 w-48 h-48 bg-sky-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-			<div className="absolute top-32 right-20 w-56 h-56 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse delay-700"></div>
+		<div className="min-h-screen h-full bg-gradient-to-b from-white via-sky-50/30 to-white flex items-center justify-center px-8 py-16">
+			{/* Subtle background decoration */}
+			<div className="absolute inset-0 overflow-hidden pointer-events-none">
+				<div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sky-100/40 rounded-full blur-3xl transform translate-x-1/3 -translate-y-1/3"></div>
+				<div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-50/40 rounded-full blur-3xl transform -translate-x-1/3 translate-y-1/3"></div>
+			</div>
 
-			{/* Main content card */}
-			<div className="relative z-10 max-w-md w-full">
-				{/* Floating header */}
-				<div className="text-center mb-6">
-					<h1 className="text-3xl font-extrabold mb-2 bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent animate-gradient">
-						ONDC Protocol
+			{/* Main container */}
+			<div className="relative z-10 w-full max-w-lg">
+				{/* Header */}
+				<div className="text-center">
+					<div className="inline-flex items-center justify-center w-14 h-14 bg-sky-500 rounded-2xl mb-4 shadow-lg shadow-sky-500/20">
+						<svg
+							className="w-7 h-7 text-white"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+							/>
+						</svg>
+					</div>
+					<h1 className="text-3xl font-bold text-gray-900 mb-2">
+						ONDC Protocol Playground
 					</h1>
-					<h2 className="text-2xl font-bold text-sky-900 mb-1">Playground</h2>
-					<p className="text-sm text-sky-600 font-light">
-						Craft your journey through protocols
+					<p className="text-gray-600 text-sm">
+						Configure and test your protocol flows
 					</p>
 				</div>
 
-				{/* Glass morphism card */}
-				<div className="backdrop-blur-xl bg-white bg-opacity-70 rounded-2xl shadow-xl p-6 border border-white border-opacity-50">
-					<div className="mb-5 text-center">
-						<h3 className="text-lg font-semibold text-sky-800 mb-2">
-							Initialize Your Flow
-						</h3>
-						<div className="w-16 h-0.5 bg-gradient-to-r from-sky-400 to-blue-500 mx-auto rounded-full"></div>
+				{/* Card */}
+				<div className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8">
+					{/* Card header */}
+					<div className="mb-8">
+						<h2 className="text-lg font-semibold text-gray-900 mb-1">
+							Initialize Flow
+						</h2>
+						<p className="text-sm text-gray-500">
+							Enter your configuration details to begin
+						</p>
 					</div>
 
-					<div className="space-y-4">
-						{/* Domain input */}
+					{/* Load saved config link */}
+					<button
+						onClick={() => setShowSavedConfigs(true)}
+						className="w-full mb-6 px-4 py-3 bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-xl text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+					>
+						<svg
+							className="w-4 h-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+							/>
+						</svg>
+						Load Saved Configuration
+					</button>
+
+					{/* Form fields */}
+					<div className="space-y-5">
+						{/* Domain */}
 						<div>
-							<label className="block text-xs font-semibold text-sky-700 mb-1.5 uppercase tracking-wider">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Domain
 							</label>
 							{dynamicList.domain?.length > 0 ? (
@@ -91,7 +134,6 @@ export default function GetPlaygroundComponent() {
 									value={domain}
 									onChange={(e) => {
 										setDomain(e.target.value);
-										// Update version list based on selected domain
 										const selectedDomainData = dynamicList.domain.find(
 											(item: any) => item.key === e.target.value
 										);
@@ -102,7 +144,7 @@ export default function GetPlaygroundComponent() {
 											}));
 										}
 									}}
-									className="w-full px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-300 text-sky-900 text-sm"
+									className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 text-gray-900 text-sm"
 								>
 									<option value="">Select a domain...</option>
 									{dynamicList.domain.map((item: any) => (
@@ -116,15 +158,15 @@ export default function GetPlaygroundComponent() {
 									type="text"
 									value={domain}
 									onChange={(e) => setDomain(e.target.value)}
-									placeholder="mobility, logistics, retail..."
-									className="w-full px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-300 text-sky-900 placeholder-sky-400 text-sm"
+									placeholder="e.g., mobility, logistics, retail"
+									className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm"
 								/>
 							)}
 						</div>
 
-						{/* Version input */}
+						{/* Version */}
 						<div>
-							<label className="block text-xs font-semibold text-sky-700 mb-1.5 uppercase tracking-wider">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Version
 							</label>
 							{dynamicList.version?.length > 0 ? (
@@ -132,7 +174,6 @@ export default function GetPlaygroundComponent() {
 									value={version}
 									onChange={(e) => {
 										setVersion(e.target.value);
-										// Update usecase list based on selected version
 										const selectedVersionData = dynamicList.version.find(
 											(item: any) => item.key === e.target.value
 										);
@@ -143,7 +184,7 @@ export default function GetPlaygroundComponent() {
 											}));
 										}
 									}}
-									className="w-full px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-300 text-sky-900 text-sm"
+									className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 text-gray-900 text-sm"
 								>
 									<option value="">Select a version...</option>
 									{dynamicList.version.map((item: any) => (
@@ -157,92 +198,61 @@ export default function GetPlaygroundComponent() {
 									type="text"
 									value={version}
 									onChange={(e) => setVersion(e.target.value)}
-									placeholder="2.0.1, 1.5.3, 3.0.0..."
-									className="w-full px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-300 text-sky-900 placeholder-sky-400 text-sm"
+									placeholder="e.g., 2.0.1, 1.5.3"
+									className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm"
 								/>
 							)}
 						</div>
 
-						{/* Flow ID input */}
+						{/* Flow ID */}
 						<div>
-							<label className="block text-xs font-semibold text-sky-700 mb-1.5 uppercase tracking-wider">
+							<label className="block text-sm font-medium text-gray-700 mb-2">
 								Flow ID
 							</label>
 							<input
 								type="text"
 								value={flowId}
 								onChange={(e) => setFlowId(e.target.value)}
-								placeholder="Unique identifier for your flow"
-								className="w-full px-4 py-2.5 bg-gradient-to-r from-sky-50 to-blue-50 border-2 border-sky-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-300 text-sky-900 placeholder-sky-400 text-sm"
+								placeholder="Enter unique flow identifier"
+								className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all duration-200 text-gray-900 placeholder-gray-400 text-sm"
 							/>
 						</div>
 
-						{/* Launch button */}
+						{/* Submit button */}
 						<button
 							onClick={() => SetConfig(domain, version, flowId)}
-							className="w-full mt-4 relative group overflow-hidden"
+							disabled={!domain || !version || !flowId}
+							className="w-full mt-6 px-6 py-3.5 bg-sky-500 hover:bg-sky-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white disabled:text-gray-400 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 hover:shadow-xl hover:shadow-sky-500/30 disabled:shadow-none"
 						>
-							<div className="absolute inset-0 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-500 rounded-xl"></div>
-							<div className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-blue-500 to-sky-400 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-							<span className="relative block px-6 py-3 text-white font-bold text-sm tracking-wide uppercase flex items-center justify-center gap-2">
-								<svg
-									className="w-4 h-4"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M14 5l7 7m0 0l-7 7m7-7H3"
-									/>
-								</svg>
-								Continue to playground
-							</span>
+							Continue to Playground
+							<svg
+								className="w-4 h-4"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M13 7l5 5m0 0l-5 5m5-5H6"
+								/>
+							</svg>
 						</button>
 					</div>
-
-					{/* Quick suggestions */}
-					{/* <div className="mt-5 pt-4 border-t border-sky-200">
-						<p className="text-xs text-sky-600 text-center mb-2 font-medium">
-							Quick Start Templates
-						</p>
-						<div className="flex flex-wrap gap-2 justify-center">
-							{[
-								{ d: "mobility", v: "2.0.1" },
-								{ d: "logistics", v: "1.2.0" },
-								{ d: "retail", v: "1.1.0" },
-							].map((template, idx) => (
-								<button
-									key={idx}
-									onClick={() => {
-										setDomain(template.d);
-										setVersion(template.v);
-									}}
-									className="px-3 py-1.5 bg-gradient-to-r from-sky-100 to-blue-100 text-sky-700 rounded-full text-xs font-medium hover:from-sky-200 hover:to-blue-200 transition-all duration-300 border border-sky-200"
-								>
-									{template.d} {template.v}
-								</button>
-							))}
-						</div>
-					</div> */}
 				</div>
 			</div>
 
-			<style>{`
-				@keyframes gradient {
-					0%, 100% { background-position: 0% 50%; }
-					50% { background-position: 100% 50%; }
-				}
-				.animate-gradient {
-					background-size: 200% 200%;
-					animation: gradient 3s ease infinite;
-				}
-				.delay-700 {
-					animation-delay: 700ms;
-				}
-			`}</style>
+			{/* Saved Configs Modal */}
+			<SavedConfigsModal
+				isOpen={showSavedConfigs}
+				onClose={() => setShowSavedConfigs(false)}
+				onConfigSelected={(domain, version, flowId) => {
+					setDomain(domain);
+					setVersion(version);
+					setFlowId(flowId);
+				}}
+			/>
 		</div>
 	);
 }

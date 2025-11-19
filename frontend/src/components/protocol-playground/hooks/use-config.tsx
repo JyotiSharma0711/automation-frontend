@@ -3,8 +3,9 @@ import { PlaygroundContext } from "../context/playground-context";
 import { toast } from "react-toastify";
 import JsonSchemaForm from "../ui/extras/rsjf-form";
 import { calcCurrentIndex } from "../mock-engine";
-import MockRunner, { convertToFlowConfig } from "@ondc/automation-mock-runner";
+import MockRunner from "@ondc/automation-mock-runner";
 import { createFlowSessionWithPlayground } from "../utils/request-utils";
+import { GetRequestEndpoint } from "../../flow-testing/guides";
 
 // hooks/useConfigOperations.ts
 export const useConfigOperations = () => {
@@ -19,9 +20,10 @@ export const useConfigOperations = () => {
 			return;
 		}
 		const dataStr = JSON.stringify(playgroundContext.config, null, 2);
+		const flowName = `${playgroundContext.config.meta.flowId}_playground_flow`;
 		const dataUri =
 			"data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-		const exportFileDefaultName = "playground-config.json";
+		const exportFileDefaultName = flowName + ".json";
 		const linkElement = document.createElement("a");
 		linkElement.setAttribute("href", dataUri);
 		linkElement.setAttribute("download", exportFileDefaultName);
@@ -180,31 +182,68 @@ export const useConfigOperations = () => {
 		}
 	};
 
+	// Extracted function to create and open flow session in new tab
+	const createAndOpenFlowSession = async (
+		subscriberUrl: string,
+		role: "BAP" | "BPP"
+	) => {
+		if (!playgroundContext.config) {
+			toast.error("No configuration found");
+			return;
+		}
+
+		playgroundContext.setLoading(true);
+		try {
+			const result = await createFlowSessionWithPlayground(
+				playgroundContext.config,
+				subscriberUrl,
+				role
+			);
+
+			if (!result) {
+				toast.error("Error creating flow session");
+				return;
+			}
+
+			// Open flow session in new tab
+			const currentUrl = window.location.origin;
+			const newTabUrl = `${currentUrl}/flow-testing?sessionId=${result}&subscriberUrl=${encodeURIComponent(subscriberUrl)}&role=${role}`;
+			window.open(newTabUrl, "_blank");
+
+			toast.success("Flow session created! Opening in new tab...");
+		} catch (error) {
+			console.error("Error creating flow session:", error);
+			toast.error("Failed to create flow session");
+		} finally {
+			playgroundContext.setLoading(false);
+		}
+	};
+
 	const createFlowSession = () => {
 		async function handleFormSubmit(formData: any) {
-			if (!playgroundContext.config) {
-				toast.error("No configuration found");
+			if (formData.subscriber_url === "testing") {
+				const subUrlBap = GetRequestEndpoint(
+					playgroundContext.config?.meta.domain || "",
+					playgroundContext.config?.meta.version || "",
+					"BAP"
+				);
+				const subUrlBpp = GetRequestEndpoint(
+					playgroundContext.config?.meta.domain || "",
+					playgroundContext.config?.meta.version || "",
+					"BPP"
+				);
+				await createAndOpenFlowSession(subUrlBap, "BPP");
+				await createAndOpenFlowSession(subUrlBpp, "BAP");
+				return;
+			}
+			// subcriber url is a valid url
+			const regex = /^(http|https):\/\/[^ "]+$/;
+			if (!regex.test(formData.subscriber_url)) {
+				toast.error("Please enter a valid URL");
 				return;
 			}
 			console.log("Form submitted with data:", formData);
-			playgroundContext.setLoading(true);
-			const result = await createFlowSessionWithPlayground(
-				playgroundContext.config,
-				formData.subscriber_url,
-				formData.role
-			);
-			if (!result) {
-				toast.error("Error creating flow session");
-				playgroundContext.setLoading(false);
-				return;
-			}
-			playgroundContext.workbenchFlow.setFlowStepNum(1);
-			playgroundContext.workbenchFlow.setSession(result);
-			playgroundContext.workbenchFlow.setFlows([
-				convertToFlowConfig(playgroundContext.config),
-			]);
-			playgroundContext.workbenchFlow.setSubscriberUrl(formData.subscriber_url);
-			playgroundContext.setLoading(false);
+			await createAndOpenFlowSession(formData.subscriber_url, formData.role);
 		}
 
 		modal.openModal(

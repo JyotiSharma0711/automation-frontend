@@ -15,6 +15,7 @@ import {
 	proceedFlow,
 	requestForFlowPermission,
 	putCacheData,
+	addFlowToSessionInDB,
 } from "../../../utils/request-utils";
 import { IoMdDownload } from "react-icons/io";
 import { FlowMap } from "../../../types/flow-state-type";
@@ -250,6 +251,7 @@ export function Accordion({
 						label="Start flow"
 						color="sky"
 						onClick={async (e) => {
+							addFlowToSessionInDB(sessionId, {id: flow.id, status: "PENDING"})
 							trackEvent({
 								category: "SCENARIO_TESTING-FLOWS",
 								action: `Started a flow: ${flow.id}`,
@@ -389,7 +391,7 @@ export function Accordion({
 				</div>
 			</div>
 			{inputPopUp && activeFormConfig && (
-				<Popup isOpen={inputPopUp} onClose={() => setInputPopUp(false)}>
+				<Popup isOpen={inputPopUp} disableClose>
 					<FormConfig
 						formConfig={activeFormConfig}
 						submitEvent={handleFormForNewFlow}

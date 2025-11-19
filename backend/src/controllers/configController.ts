@@ -25,6 +25,7 @@ export const getFlows = async (req: Request, res: Response) => {
 
 export const getSeanrioFormData = async (_req: Request, res: Response) => {
 	try {
+		logger.info("Fetching scenario form data from config service");
 		const response = await axios.get(
 			`${process.env.CONFIG_SERVICE as string}/ui/senario`
 		);

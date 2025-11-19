@@ -1,5 +1,5 @@
 import IconButton from "../../../ui/mini-components/icon-button";
-import { FaDownload, FaUpload } from "react-icons/fa";
+import { FaDownload, FaUpload, FaArrowLeft } from "react-icons/fa";
 import { GrFlows, GrRedo } from "react-icons/gr";
 import { IoMdSkipForward, IoMdTrash } from "react-icons/io";
 
@@ -14,6 +14,7 @@ interface PlaygroundHeaderProps {
 	onRun: () => void;
 	onRunCurrent: () => void;
 	onCreateFlowSession: () => void;
+	onBack: () => void;
 }
 
 export const PlaygroundHeader = ({
@@ -26,9 +27,16 @@ export const PlaygroundHeader = ({
 	onRun,
 	onRunCurrent,
 	onCreateFlowSession,
+	onBack,
 }: PlaygroundHeaderProps) => (
 	<div className="h-16 flex items-center justify-between px-6 bg-gradient-to-r from-white to-sky-50 border-b border-sky-100 shadow-sm">
 		<div className="flex items-center gap-6">
+			<IconButton
+				icon={<FaArrowLeft size={16} />}
+				label="Back to Starter"
+				onClick={onBack}
+				color="gray"
+			/>
 			<div className="flex items-center gap-3">
 				<span className="text-xl font-bold bg-gradient-to-r from-sky-600 via-sky-500 to-sky-600 bg-clip-text text-transparent tracking-tight">
 					PLAYGROUND MODE
@@ -59,6 +67,7 @@ export const PlaygroundHeader = ({
 				<GrFlows size={16} />
 				<span className="font-semibold text-sm">create live session</span>
 			</button>
+
 			<IconButton
 				icon={<FaDownload size={16} />}
 				label="Export"

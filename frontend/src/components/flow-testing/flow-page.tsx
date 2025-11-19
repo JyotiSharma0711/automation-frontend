@@ -24,7 +24,7 @@ export default function FlowContent() {
 		flows,
 		setFlows,
 		report,
-		setReport,
+		// setReport,
 	} = useWorkbenchFlows();
 	const [isFormSubmitted, setIsFormSubmitted] = useState(false);
 	const [dynamicList, setDynamicList] = useState<{
@@ -247,8 +247,8 @@ export default function FlowContent() {
 						flows={flows}
 						subUrl={subscriberUrl}
 						sessionId={session}
-						setStep={setFlowStepNum}
-						setReport={setReport}
+						// setStep={setFlowStepNum}
+						// setReport={setReport}
 						newSession={newSession}
 					/>
 				);

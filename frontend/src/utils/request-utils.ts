@@ -1,5 +1,5 @@
 import axios from "axios";
-import { SessionCache, TransactionCache } from "../types/session-types";
+import { SessionCache, TransactionCache, FlowInDB } from "../types/session-types";
 import { toast } from "react-toastify";
 
 export const triggerSearch = async (
@@ -411,3 +411,43 @@ export const getSessions = async (subId: string, npType: string) => {
     throw new Error("ERROR while getting sessions from db");
   }
 }
+
+export const addFlowToSessionInDB = async (sessionId: string, flow: FlowInDB) => {
+  try {
+    const res = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/api/sessions/flows/${sessionId}`,
+      flow,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_DB_SERVICE_API_KEY,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Error while adding flow to session:", error);
+    throw new Error("ERROR while adding flow to session");
+  }
+};
+
+export const updateFlowInSession = async (sessionId: string, flow: FlowInDB) => {
+  try {
+    const res = await axios.put(
+      `${import.meta.env.VITE_BACKEND_URL}/api/sessions/flows/${sessionId}`,
+      { flow },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": import.meta.env.VITE_DB_SERVICE_API_KEY,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("Error while updating flow in session:", error);
+    throw new Error("ERROR while updating flow in session");
+  }
+};

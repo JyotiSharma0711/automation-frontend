@@ -19,12 +19,15 @@ import { getGithubAvatarUrl } from "./utils/regsitry-utils";
 import { SubscriberData } from "./components/registry-components/registry-types";
 import * as api from "./utils/registry-apis";
 import Footer from "./components/main-footer";
-import {SessionProvider} from "./context/context"
-// import {GuideStepsEnums, useGuide} from "./context/guideContext"
+import { SessionProvider } from "./context/context";
+// import { GuideStepsEnums, useGuide } from "./context/guideContext";
 import Walkthrough from "./pages/walkthrough";
-import { trackPageView } from "./utils/analytics"
+import { trackPageView } from "./utils/analytics";
 import ProtocolPlayGround from "./components/protocol-playground/main";
 import PastSessions from "./pages/past-sessions";
+import DBBackOffice from "./components/db-back-office/db-back-office";
+import FlowTestingWrapper from "./components/flow-testing/flow-testing-wrapper";
+// import DevGuidePage from "./components/developer guide/dev-page";
 
 function App() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,7 +57,7 @@ function App() {
 
 	useEffect(() => {
 		trackPageView(location.pathname + location.search);
-	  }, [location]);
+	}, [location]);
 
 	useEffect(() => {
 		fetchUserLookUp();
@@ -148,14 +151,20 @@ function App() {
 							<Route path="/schema" element={<SchemaValidation />} />
 							{/* <Route path="/unit" element={<ApiTesting />} /> */}
 							<Route path="/scenario" element={<FlowContent />} />
+							<Route path="/flow-testing" element={<FlowTestingWrapper />} />
 							<Route path="/login" element={<GitHubLogin />} />
 							<Route path="/profile" element={<UserProfile />} />
 							<Route path="/tools" element={<ToolsPage />} />
 							<Route path="/seller-onboarding" element={<SellerOnboarding />} />
 							<Route path="/playground" element={<ProtocolPlayGround />} />
 							<Route path="/walkthrough" element={<Walkthrough />} />
-							<Route path="/history" element={<PastSessions loggedIn={false}/>} />
+							<Route
+								path="/history"
+								element={<PastSessions loggedIn={false} />}
+							/>
 							<Route path="*" element={<NotFoundPage />} />
+							<Route path="/db-back-office" element={<DBBackOffice />} />
+							{/* <Route path="/docs" element={<DevGuidePage />} /> */}
 						</Routes>
 					</div>
 					<Footer />

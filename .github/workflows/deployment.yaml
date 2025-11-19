@@ -1,20 +1,19 @@
 name: Deploy Automation Frontend
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
   push:
     branches:
       - "release-staging"
       - "main"
 
-jobs: 
+jobs:
   deploy-staging:
     if: github.ref == 'refs/heads/release-staging'
     runs-on: ubuntu-latest
-    environment: 
-          name: staging
-          url: https://github.com
-      
+    environment:
+      name: staging
+      url: https://github.com
 
     steps:
       - name: Checkout code
@@ -55,12 +54,12 @@ jobs:
           ssh -i ./key.pem ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<EOF
           REPO_DIR=~/ONDC-automation-framework-staging/automation-frontend
           echo "Writing environment variables to .env file"
-          
+
           echo "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BPP_URL=${{ secrets.VITE_BPP_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BAP_URL=${{ secrets.VITE_BAP_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BASE_URL=${{ vars.VITE_BASE_URL }}" >> \$REPO_DIR/frontend/.env
-          
+
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> \$REPO_DIR/backend/.env
           echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> \$REPO_DIR/backend/.env
           echo "PORT=${{ secrets.PORT }}" >> \$REPO_DIR/backend/.env
@@ -88,6 +87,9 @@ jobs:
           echo "AWS_REGION =${{ secrets.AWS_REGION }}" >> \$REPO_DIR/backend/.env
           echo "S3_BUCKET_NAME =${{ secrets.S3_BUCKET_NAME }}" >> \$REPO_DIR/backend/.env
           echo "S3_FOLDER =${{ secrets.S3_FOLDER }}" >> \$REPO_DIR/backend/.env
+          echo "ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME_STAGING }}" >> \$REPO_DIR/backend/.env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD_STAGING }}" >> \$REPO_DIR/backend
+          echo "FINVU_SERVICE_URL =${{ vars.FINVU_SERVICE_URL }}" >> \$REPO_DIR/backend/.env
           EOF
 
       - name: Verify docker-compose.yml files
@@ -159,12 +161,12 @@ jobs:
           ssh -i ./key.pem ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} <<EOF
           REPO_DIR=~/ONDC-automation-framework/automation-frontend
           echo "Writing environment variables to .env file"
-          
+
           echo "VITE_BACKEND_URL=${{ secrets.VITE_BACKEND_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BPP_URL=${{ secrets.VITE_BPP_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BAP_URL=${{ secrets.VITE_BAP_URL }}" >> \$REPO_DIR/frontend/.env
           echo "VITE_BASE_URL=${{ vars.VITE_BASE_URL }}" >> \$REPO_DIR/frontend/.env
-          
+
           echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> \$REPO_DIR/backend/.env
           echo "SESSION_SECRET=${{ secrets.SESSION_SECRET }}" >> \$REPO_DIR/backend/.env
           echo "PORT=${{ secrets.PORT }}" >> \$REPO_DIR/backend/.env
@@ -191,10 +193,11 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY =${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> \$REPO_DIR/backend/.env
           echo "AWS_REGION =${{ secrets.AWS_REGION }}" >> \$REPO_DIR/backend/.env
           echo "S3_BUCKET_NAME =${{ secrets.S3_BUCKET_NAME }}" >> \$REPO_DIR/backend/.env
-          echo "S3_FOLDER =${{ secrets.S3_FOLDER }}" >> \$REPO_DIR/backend/.env
-          
-          
-          
+          echo "S3_FOLDER =${{ secrets.S3_FOLDER }}" >> \$REPO_DIR/backend/.env       
+          echo "ADMIN_USERNAME=${{ secrets.ADMIN_USERNAME_MAIN }}" >> \$REPO_DIR/backend/.env
+          echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD_MAIN }}" >> \$REPO_DIR/backend/.env
+          echo "FINVU_SERVICE_URL =${{ vars.FINVU_SERVICE_URL }}" >> \$REPO_DIR/backend/.env
+
           EOF
       - name: Verify docker-compose.yml files
         run: |

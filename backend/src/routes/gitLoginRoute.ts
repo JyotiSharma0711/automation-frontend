@@ -2,7 +2,9 @@ import { Request, Router, Response } from "express";
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import { verifyJWT } from "../services/registryServices";
+import {getUser, createUser} from "../services/dbService"
 import logger from "@ondc/automation-logger";
+import { getOrCreateUser } from "../utils";
 const router = Router();
 
 const CLIENT_ID = process.env.GITHUB_CLIENT_ID;
@@ -124,6 +126,9 @@ router.get("/api/me", async (req: Request, res: Response) => {
 			throw new Error("Invalid token");
 		}
 		console.log("Decoded token:", decoded);
+
+		await getOrCreateUser(decoded)
+
 		res.status(200).send({
 			user: decoded,
 			ok: true,

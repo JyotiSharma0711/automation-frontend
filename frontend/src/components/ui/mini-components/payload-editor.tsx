@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReactDOM from "react-dom";
 import Editor from "@monaco-editor/react";
 
 const PayloadEditor = ({ onAdd }: any) => {
@@ -17,6 +18,7 @@ const PayloadEditor = ({ onAdd }: any) => {
   };
 
   return (
+    ReactDOM.createPortal(
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-[#f7f7f7] bg-white rounded-2xl shadow-lg p-6 w-full max-w-3xl">
         <div className="flex items-center justify-between mb-4">
@@ -48,7 +50,9 @@ const PayloadEditor = ({ onAdd }: any) => {
           />
         </div>
       </div>
-    </div>
+    </div>,
+   	document.body
+    )
   );
 };
 

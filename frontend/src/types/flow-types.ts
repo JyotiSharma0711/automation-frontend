@@ -16,6 +16,7 @@ export interface Flow {
 	description: string;
 	sequence: SequenceStep[];
 	metadata?: MetadataField[];
+	tags?: [string]
 }
 
 export interface MetadataField {
