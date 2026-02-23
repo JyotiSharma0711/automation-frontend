@@ -31,10 +31,12 @@ type FormValues = {
     provider_location: string[];
     location_gps: string;
     location_pin_code: string;
+    order_type: "ILBN" | "ILFP" | "ILBP";
     items: {
         itemId: string;
         quantity: number;
         location: string;
+        estimated_price: number;
     }[];
 } & Partial<Record<OfferKey, boolean>>;
 
@@ -54,14 +56,25 @@ export default function RetINVLInit({
             provider_location: [],
             location_gps: "",
             location_pin_code: "",
+            order_type: "ILBN",
             items: [
-                { itemId: "", quantity: 1, location: "" },
-                { itemId: "", quantity: 1, location: "" },
+                {
+                    itemId: "",
+                    quantity: 1,
+                    location: "",
+                    estimated_price: 0,
+                },
+                {
+                    itemId: "",
+                    quantity: 1,
+                    location: "",
+                    estimated_price: 0,
+                },
             ],
         },
     });
 
-    const { fields, append, remove } = useFieldArray<FormValues, "items">({
+    const { fields, append, remove } = useFieldArray({
         control,
         name: "items",
     });
@@ -80,7 +93,11 @@ export default function RetINVLInit({
             toast.error(`Form validation failed: ${errors[0]}`);
             return;
         }
-        await submitEvent({ jsonPath: {}, formData: data as unknown as Record<string, string> });
+
+        await submitEvent({
+            jsonPath: {},
+            formData: data as unknown as Record<string, string>,
+        });
     };
 
     const handlePaste = (data: unknown) => {
@@ -88,8 +105,7 @@ export default function RetINVLInit({
             const providers = (data as OnSearchPayload).message.catalog["bpp/providers"];
             setProviders(providers);
 
-            const providerIDs = providers.map((p) => p.id);
-            setProviderOptions(providerIDs);
+            setProviderOptions(providers.map((p) => p.id));
 
             const provider = providers[0];
             if (provider) {
@@ -98,13 +114,15 @@ export default function RetINVLInit({
             }
 
             const offers = providers.flatMap((p) => p.offers || []).map((offer) => offer.id);
+
             setOfferOptions(offers);
             setIsDataPasted(true);
         } catch (err) {
             setErrorWhilePaste("Invalid payload structure.");
-            toast.error("Invalid payload structure. Please check the pasted data.");
+            toast.error("Invalid payload structure.");
             console.error(err);
         }
+
         setIsPayloadEditorActive(false);
     };
 
@@ -147,41 +165,38 @@ export default function RetINVLInit({
             {errorWhilePaste && (
                 <p className="text-red-500 text-sm italic mt-1">{errorWhilePaste}</p>
             )}
+
             <button
                 type="button"
                 onClick={() => setIsPayloadEditorActive(true)}
-                className="p-2 border rounded-full hover:bg-gray-100"
+                className="p-2 border rounded-full"
             >
                 <FaRegPaste size={14} />
             </button>
 
             {!isDataPasted ? (
-                <div className="flex items-start gap-3 border-l-4 border-blue-500 bg-blue-50 p-3 rounded">
-                    <p className="text-sm text-blue-800 flex items-center gap-1">
-                        Paste <strong>on_search</strong> payload using the button
-                        <span className="p-2 border rounded-full hover:bg-gray-100">
-                            <FaRegPaste size={14} />
-                        </span>
-                        to select items
-                    </p>
+                <div className="p-3 bg-blue-50 border-l-4 border-blue-500">
+                    Paste on_search payload to continue
                 </div>
             ) : (
                 <form
                     onSubmit={handleSubmit(onSubmit)}
-                    className="space-y-4 h-[500px] overflow-y-scroll p-4"
+                    className="space-y-4 p-4 h-[500px] overflow-y-scroll"
                 >
+                    {/* ORDER TYPE */}
                     <div className={fieldWrapperStyle}>
-                        <label className={labelStyle}>Select Provider Id</label>
-                        {renderSelectOrInput("provider", providerOptions)}
+                        <label className={labelStyle}>Order Type</label>
+                        <select {...register("order_type")} className={inputStyle}>
+                            <option value="ILBN">ILBN</option>
+                            <option value="ILFP">ILFP</option>
+                            <option value="ILBP">ILBP</option>
+                        </select>
                     </div>
 
+                    {/* PROVIDER */}
                     <div className={fieldWrapperStyle}>
-                        <label className={labelStyle}>Enter City Code</label>
-                        <input
-                            {...register("city_code")}
-                            className={inputStyle}
-                            placeholder="Enter city code"
-                        />
+                        <label className={labelStyle}>Provider</label>
+                        {renderSelectOrInput("provider", providerOptions)}
                     </div>
 
                     <Controller
@@ -236,16 +251,23 @@ export default function RetINVLInit({
                         }}
                     />
 
+                    {/* CITY */}
                     <div className={fieldWrapperStyle}>
-                        <label className={labelStyle}>Delivery Location GPS</label>
+                        <label className={labelStyle}>City Code</label>
+                        <input {...register("city_code")} className={inputStyle} />
+                    </div>
+
+                    {/* GPS */}
+                    <div className={fieldWrapperStyle}>
+                        <label className={labelStyle}>GPS</label>
                         <input {...register("location_gps")} className={inputStyle} />
                     </div>
 
+                    {/* PIN */}
                     <div className={fieldWrapperStyle}>
-                        <label className={labelStyle}>Delivery Pin Code</label>
+                        <label className={labelStyle}>Pin Code</label>
                         <input {...register("location_pin_code")} className={inputStyle} />
                     </div>
-
                     {offerOptions.length > 0 && (
                         <div className={fieldWrapperStyle}>
                             <label className={labelStyle}>Available Offers</label>
@@ -263,15 +285,16 @@ export default function RetINVLInit({
                         </div>
                     )}
 
+                    {/* ITEMS */}
                     {fields.map((field, index) => (
-                        <div key={field.id} className="border p-3 rounded space-y-2">
+                        <div key={field.id} className="border p-3 rounded">
                             <div className={fieldWrapperStyle}>
-                                <label className={labelStyle}>Select Item ID: {index + 1}</label>
+                                <label>Item ID</label>
                                 {renderSelectOrInput(`items.${index}.itemId`, itemOptions)}
                             </div>
 
                             <div className={fieldWrapperStyle}>
-                                <label className={labelStyle}>Quantity</label>
+                                <label>Quantity</label>
                                 <input
                                     type="number"
                                     {...register(`items.${index}.quantity`, {
@@ -282,7 +305,19 @@ export default function RetINVLInit({
                             </div>
 
                             <div className={fieldWrapperStyle}>
-                                <label className={labelStyle}>Item Location Id:</label>
+                                <label>Estimated Price</label>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    {...register(`items.${index}.estimated_price`, {
+                                        valueAsNumber: true,
+                                    })}
+                                    className={inputStyle}
+                                />
+                            </div>
+
+                            <div className={fieldWrapperStyle}>
+                                <label>Item Location</label>
                                 {renderSelectOrInput(`items.${index}.location`, locationOptions)}
                             </div>
                         </div>
@@ -291,26 +326,31 @@ export default function RetINVLInit({
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={() => append({ itemId: "", quantity: 1, location: "" })}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            onClick={() =>
+                                append({
+                                    itemId: "",
+                                    quantity: 1,
+                                    location: "",
+                                    estimated_price: 0,
+                                })
+                            }
+                            className="px-4 py-2 bg-blue-600 text-white rounded"
                         >
                             Add Item
                         </button>
+
                         {fields.length > 2 && (
                             <button
                                 type="button"
                                 onClick={() => remove(fields.length - 1)}
-                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                className="px-4 py-2 bg-red-500 text-white rounded"
                             >
-                                Remove Item
+                                Remove
                             </button>
                         )}
                     </div>
 
-                    <button
-                        type="submit"
-                        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
-                    >
+                    <button type="submit" className="w-full bg-green-600 text-white py-2 rounded">
                         Submit
                     </button>
                 </form>
@@ -319,108 +359,33 @@ export default function RetINVLInit({
     );
 }
 
-type FormData = {
-    city_code: string;
-    provider: string;
-    provider_location: string[];
-    location_gps: string;
-    location_pin_code: string;
-    items: {
-        itemId: string;
-        quantity: number;
-        location: string;
-    }[];
-} & Partial<Record<OfferKey, boolean>>;
+// ================= VALIDATION =================
 
-type FormDataRET11 = {
-    provider: string;
-    provider_location: string[];
-    location_gps: string;
-    location_pin_code: string;
-} & Partial<Record<OfferKey, boolean>>;
-
-function validateFormData(data: FormData): {
-    valid: boolean;
-    errors: string[];
-} {
+function validateFormData(data: FormValues) {
     const errors: string[] = [];
 
-    // Validate top-level fields (excluding items and offer checkboxes)
-    const fieldsToValidate = [
-        "provider",
-        "location_gps",
-        "location_pin_code",
-        "city_code",
-    ] as const;
-    for (const key of fieldsToValidate) {
-        if (data[key] === undefined || data[key] === null || data[key] === "") {
-            errors.push(`Field ${key} cannot be empty.`);
-        }
-    }
+    if (!data.order_type) errors.push("Order type required.");
 
-    // Validate provider_location (must have at least one selection)
-    if (!data.provider_location || data.provider_location.length === 0) {
-        errors.push("At least one provider location must be selected.");
-    }
+    if (!data.provider) errors.push("Provider required.");
 
-    // Rule 1: At least 2 items
-    if (!data.items || data.items.length < 2) {
-        errors.push("At least 2 items must be selected.");
-    }
+    if (!data.city_code) errors.push("City code required.");
 
-    // Rule 2: Validate each item's fields
-    if (data.items) {
-        data.items.forEach((item, index) => {
-            if (!item.itemId || item.itemId === "") {
-                errors.push(`Item ${index + 1}: Item ID cannot be empty.`);
-            }
-            if (!item.location || item.location === "") {
-                errors.push(`Item ${index + 1}: Location cannot be empty.`);
-            }
-            if (!item.quantity || item.quantity <= 0) {
-                errors.push(`Item ${index + 1}: Quantity must be greater than 0.`);
-            }
-        });
-    }
+    if (!data.location_gps) errors.push("GPS required.");
 
-    // Rule 3: All items must be unique
-    const itemIds = data.items.map((item) => item.itemId).filter((id) => id !== "");
-    const uniqueItemIds = new Set(itemIds);
-    if (itemIds.length > 0 && itemIds.length !== uniqueItemIds.size) {
-        errors.push("All selected items must be unique.");
-    }
+    if (!data.location_pin_code) errors.push("Pin code required.");
 
-    // Rule 4: Only one offer can be selected (non-falsy)
-    const offerKeys = Object.keys(data).filter((key): key is OfferKey => key.startsWith("offers_"));
-    const selectedOffers = offerKeys.filter((key) => Boolean(data[key]));
-    if (selectedOffers.length > 1) {
-        errors.push("Only one offer can be selected.");
-    }
+    if (!data.provider_location?.length) errors.push("Select provider location.");
 
-    return {
-        valid: errors.length === 0,
-        errors,
-    };
-}
+    if (!data.items || data.items.length < 2) errors.push("At least 2 items required.");
 
-export function validateFormDataRET11(data: FormDataRET11): {
-    valid: boolean;
-    errors: string[];
-} {
-    const errors: string[] = [];
-
-    // Validate top-level fields (excluding items and offer checkboxes)
-    const fieldsToValidate = ["provider", "location_gps", "location_pin_code"] as const;
-    for (const key of fieldsToValidate) {
-        if (data[key] === undefined || data[key] === null || data[key] === "") {
-            errors.push(`Field ${key} cannot be empty.`);
-        }
-    }
-
-    // Validate provider_location (must have at least one selection)
-    if (!data.provider_location || data.provider_location.length === 0) {
-        errors.push("At least one provider location must be selected.");
-    }
+    data.items.forEach((item, index) => {
+        if (!item.itemId) errors.push(`Item ${index + 1}: ID required`);
+        if (!item.location) errors.push(`Item ${index + 1}: Location required`);
+        if (!item.quantity || item.quantity <= 0)
+            errors.push(`Item ${index + 1}: Quantity invalid`);
+        if (!item.estimated_price || item.estimated_price <= 0)
+            errors.push(`Item ${index + 1}: Estimated price invalid and must be greater than 1`);
+    });
 
     return {
         valid: errors.length === 0,
