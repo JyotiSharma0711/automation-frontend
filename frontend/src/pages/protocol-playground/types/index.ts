@@ -19,6 +19,8 @@ export const ONDC_ACTION_LIST = [
     "on_update",
     "issue",
     "on_issue",
+    "issue_close",
+    "on_issue_close",
 ] as const;
 
 export const ONDC_FORM_LIST = ["dynamic_form", "html_form (not-implemented-yet"];
