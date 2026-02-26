@@ -82,8 +82,7 @@ export default function FlowContent() {
         npType: "BAP",
         env: "STAGING",
     });
-    const { sessionId: contextSessionId, setSessionId } = useSession();
-    console.log(setSessionId.toString());
+    const { sessionId: contextSessionId } = useSession();
     const navigate = useNavigate();
 
     const [existingSessions, setExistingSessions] = useState<PreviousSessionItem[]>([]);
