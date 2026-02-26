@@ -35,6 +35,7 @@ import Metro210Select from "../custom-forms/metro-seat-select";
 import Metro210EndStopUpdate from "../custom-forms/update-end-stop-update";
 import Metro210StartEndStopSelection from "../custom-forms/trv11_start_end_stop_selection";
 import FIS12Select from "../custom-forms/fis12-select";
+import FIS13AddonSelect from "../custom-forms/fis13-addon-select";
 import { RJSFSchema } from "@rjsf/utils";
 
 export interface FormFieldConfigType {
@@ -75,7 +76,8 @@ export interface FormFieldConfigType {
         | "trv11_210_select"
         | "trv11_210_update_end_station"
         | "trv11_210_start_end_stop_selection"
-        | "fis12_select_pl";
+        | "fis12_select_pl"
+        | "fis13_addon_select";
     payloadField: string;
     values?: string[];
     defaultValue?: string;
@@ -304,6 +306,10 @@ export default function FormConfig({
 
     if (formConfig.find((field) => field.type === "fis12_select_pl")) {
         return <FIS12Select submitEvent={submitEvent} />;
+    }
+
+    if (formConfig.find((field) => field.type === "fis13_addon_select")) {
+        return <FIS13AddonSelect submitEvent={submitEvent} referenceData={referenceData} />;
     }
 
     // NOTE: The JsonSchemaForm check must come after all other specific form type checks above.
