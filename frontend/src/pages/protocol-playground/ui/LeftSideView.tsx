@@ -18,18 +18,16 @@ export function LeftSideView(props: { width: string; activeApi?: string }) {
     const tabs = isForm ? PLAYGROUND_LEFT_TABS_FORM : PLAYGROUND_LEFT_TABS;
 
     const [activeLeftTab, setActiveLeftTab] = useState<string>(tabs[0].id);
-    const [activeTabConfig, setActiveTabConfig] = useState(tabs[0]);
     useEffect(() => {
-        const newActiveTabConfig = tabs.find((tab) => tab.id === activeLeftTab);
-        if (newActiveTabConfig) {
-            setActiveTabConfig(newActiveTabConfig);
-        } else {
+        if (!tabs.some((tab) => tab.id === activeLeftTab)) {
             setActiveLeftTab(tabs[0].id);
-            setActiveTabConfig(tabs[0]);
         }
-    }, [activeLeftTab, activeApi]);
+    }, [tabs, activeLeftTab]);
 
-    // const activeTabConfig = tabs.find((tab) => tab.id === activeLeftTab)!;
+    const activeTabConfig = useMemo(
+        () => tabs.find((tab) => tab.id === activeLeftTab) ?? tabs[0],
+        [tabs, activeLeftTab]
+    );
 
     // Get the current editor content
     const getEditorContent = () => {
@@ -127,7 +125,10 @@ export function LeftSideView(props: { width: string; activeApi?: string }) {
             {/* Editor - takes remaining space */}
             <div className="flex-1 p-2 overflow-hidden">
                 <Editor
-                    key={`${activeApi}-${activeLeftTab}`}
+                    key={`${activeApi}-${activeTabConfig.id}-${activeTabConfig.language}`}
+                    path={`${activeApi ?? "no-api"}-${activeTabConfig.id}.${
+                        activeTabConfig.language === "javascript" ? "js" : activeTabConfig.language
+                    }`}
                     theme="dark-skyblue"
                     beforeMount={handleEditorWillMount}
                     height="100%"

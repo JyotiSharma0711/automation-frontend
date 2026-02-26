@@ -344,6 +344,10 @@ function RenderFlows({
                 delete filteredData["active_session_id"];
                 setDifficultyCache(response.data.sessionDifficulty);
                 setCacheSessionData(response.data);
+
+                if (cacheSessionData === null) {
+                    updateLocalStorageSession(response.data, sessionId);
+                }
                 apiCallFailCount.current = 0; // Reset fail count on successful fetch
             })
             .catch((e: unknown) => {
@@ -640,7 +644,7 @@ function RenderFlows({
                     {/* Right Column - Sticky Request & Response */}
                     <div className="w-full sm:w-[40%] p-4">
                         {/* Sticky Container */}
-                        <div className=" bg-gray-100 rounded-md shadow-md border sticky top-20">
+                        <div className=" bg-gray-100 rounded-md border sticky top-20">
                             {/* <h2 className="m-1 text-lg font-semibold">Request & Response</h2> */}
                             <Tabs
                                 className="mt-4 ml-2"
@@ -778,3 +782,25 @@ function RenderFlows({
 }
 
 export default RenderFlows;
+
+function updateLocalStorageSession(sessionData: SessionCache, sessionId: string) {
+    if (sessionData.usecaseId === "PLAYGROUND-FLOW") {
+        return;
+    }
+    const data = {
+        sessionId: sessionId,
+        subscriberUrl: sessionData.subscriberUrl,
+        role: sessionData.npType,
+        timestamp: new Date().toISOString(),
+    };
+    const currentData = JSON.parse(localStorage.getItem("flowTestingSessions") || "[]");
+    const existingIndex = currentData.findIndex(
+        (item: { sessionId: string }) => item.sessionId === sessionId
+    );
+    if (existingIndex !== -1) {
+        currentData[existingIndex] = data;
+    } else {
+        currentData.push(data);
+    }
+    localStorage.setItem("flowTestingSessions", JSON.stringify(currentData));
+}

@@ -36,6 +36,7 @@ type FormItem = {
 type FormValues = {
     provider: string;
     fulfillment?: string;
+    timestamp?: string;
     items: FormItem[];
 };
 
@@ -52,6 +53,7 @@ export default function TRVSelect({
     const { control, handleSubmit, watch, register, setValue, getValues } = useForm<FormValues>({
         defaultValues: {
             provider: "",
+            timestamp: "",
             items: [{ itemId: "", count: 1, addOns: [], addOnsQuantity: 1 }],
         },
     });
@@ -65,6 +67,10 @@ export default function TRVSelect({
     const [itemOptions, setItemOptions] = useState<ExtractedItem[]>([]);
 
     const onSubmit = async (data: FormValues) => {
+        // Convert timestamp to ISO format if present
+        if (data.timestamp) {
+            data.timestamp = new Date(data.timestamp).toISOString();
+        }
         await submitEvent({ jsonPath: {}, formData: data as unknown as Record<string, string> });
     };
 
@@ -279,6 +285,15 @@ export default function TRVSelect({
                             Remove Item
                         </button>
                     )}
+                </div>
+
+                <div className={fieldWrapperStyle}>
+                    <label className={labelStyle}>Timestamp</label>
+                    <input
+                        type="datetime-local"
+                        {...register("timestamp")}
+                        className={inputStyle}
+                    />
                 </div>
 
                 <button

@@ -25,7 +25,7 @@ const Domains = ({ activeDomain }: { activeDomain: { domain: DomainItem[] } }) =
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-min items-start">
                         {activeDomain?.domain?.map((dom, domIndex) => {
                             // Generate a stable, unique id for this card
-                            const domId = dom.id ?? `${dom.key}__${domIndex}`;
+                            const domId = String(dom.id ?? `${dom.key}__${domIndex}`);
                             const isOpen = openId === domId;
 
                             const totalUseCases = (dom.version ?? []).reduce(
@@ -39,11 +39,12 @@ const Domains = ({ activeDomain }: { activeDomain: { domain: DomainItem[] } }) =
                                     className="bg-white rounded-2xl shadow-lg shadow-sky-100/50 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-sky-200/50 border border-sky-100"
                                 >
                                     {/* Header */}
-                                    <div
-                                        className="flex items-center justify-between p-6 cursor-pointer bg-gradient-to-r from-sky-50 to-sky-100/50 hover:from-sky-100 hover:to-sky-100 transition-colors duration-200"
+                                    <button
+                                        type="button"
+                                        className="w-full text-left flex items-center justify-between p-6 cursor-pointer bg-gradient-to-r from-sky-50 to-sky-100/50 hover:from-sky-100 hover:to-sky-100 transition-colors duration-200"
                                         onClick={() => handleToggle(domId)}
                                         aria-expanded={isOpen}
-                                        role="button"
+                                        aria-controls={`domain-content-${domId}`}
                                     >
                                         <div>
                                             <h3 className="text-xl font-bold text-gray-900">
@@ -53,15 +54,16 @@ const Domains = ({ activeDomain }: { activeDomain: { domain: DomainItem[] } }) =
                                                 {totalUseCases} use cases
                                             </span>
                                         </div>
-                                        <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-sm">
+                                        <div className="w-10 h-10 rounded-full bg-white/80 flex items-center justify-center shadow-sm pointer-events-none">
                                             <FaChevronDown
                                                 className={`w-3 h-3 text-sky-600 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
                                             />
                                         </div>
-                                    </div>
+                                    </button>
 
                                     {/* Content */}
                                     <div
+                                        id={`domain-content-${domId}`}
                                         className={`transition-all duration-300 ease-in-out ${
                                             isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                                         } overflow-hidden`}

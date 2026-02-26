@@ -22,7 +22,7 @@ const Features: FC = () => {
     return (
         <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 min-h-screen relative">
             {/* Subtle background pattern */}
-            <div className="absolute inset-0 opacity-40">
+            <div className="absolute inset-0 opacity-40 pointer-events-none" aria-hidden="true">
                 <div className="absolute top-20 left-1/4 w-2 h-2 bg-sky-300/30 rounded-full"></div>
                 <div className="absolute top-40 right-1/3 w-1 h-1 bg-indigo-300/40 rounded-full"></div>
                 <div className="absolute bottom-40 left-1/3 w-3 h-3 bg-purple-200/30 rotate-45"></div>

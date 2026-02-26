@@ -56,7 +56,7 @@ export default function FilterFlowsMenu({
                 style={{ maxHeight }}
                 className="overflow-hidden transition-all duration-300"
             >
-                <div className="flex flex-row gap-2 pl-4 py-1">
+                <div className="flex gap-2 pl-4 py-1 overflow-x-auto whitespace-nowrap pb-1">
                     {flowTags.map((item: string) => (
                         <div
                             key={item}

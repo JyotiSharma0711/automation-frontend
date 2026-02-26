@@ -1,7 +1,8 @@
 import IconButton from "../../../../components/ui/mini-components/icon-button";
 import { FaDownload, FaUpload, FaArrowLeft } from "react-icons/fa";
-import { GrFlows, GrRedo } from "react-icons/gr";
+import { GrRedo } from "react-icons/gr";
 import { IoMdSkipForward, IoMdTrash } from "react-icons/io";
+import { TbAutomaticGearboxFilled } from "react-icons/tb";
 
 // components/playground/PlaygroundHeader.tsx
 interface PlaygroundHeaderProps {
@@ -60,23 +61,21 @@ export const PlaygroundHeader = ({
         </div>
 
         <div className="flex items-center gap-2">
-            <button
+            <IconButton
+                icon={<TbAutomaticGearboxFilled size={16} />}
+                label="Create live session"
                 onClick={onCreateFlowSession}
-                className="flex items-center gap-2 px-3 py-1.5 bg-sky-50 rounded-lg text-sky-600 border border-sky-100 hover:bg-sky-100 hover:scale-105 transition-transform shadow-sm"
-            >
-                <GrFlows size={16} />
-                <span className="font-semibold text-sm">create live session</span>
-            </button>
-
+                color="sky"
+            />
             <IconButton
                 icon={<FaDownload size={16} />}
-                label="Export"
+                label="Download"
                 onClick={onExport}
                 color="sky"
             />
             <IconButton
                 icon={<FaUpload size={16} />}
-                label="Import"
+                label="Upload"
                 onClick={onImport}
                 color="sky"
             />

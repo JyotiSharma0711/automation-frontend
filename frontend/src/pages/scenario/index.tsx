@@ -18,6 +18,10 @@ import { ROUTES } from "@constants/routes";
 import { Domain, DomainVersion } from "@/pages/schema-validation/types";
 import { Flow } from "@/types/flow-types";
 import { sessionIdSupport } from "@/utils/localStorageManager";
+import {
+    PreviousSessionItem,
+    PreviousSessionsPanel,
+} from "@/pages/scenario/components/previous-sessions-panel";
 
 type DomainVersionWithUsecase = DomainVersion & {
     usecase: string[];
@@ -78,9 +82,10 @@ export default function FlowContent() {
         npType: "BAP",
         env: "STAGING",
     });
-    const { sessionId: contextSessionId, setSessionId } = useSession();
-    console.log(setSessionId.toString());
+    const { sessionId: contextSessionId } = useSession();
     const navigate = useNavigate();
+
+    const [existingSessions, setExistingSessions] = useState<PreviousSessionItem[]>([]);
 
     const createAndOpenSession = async (data: ScenarioFormData, newTab = true) => {
         try {
@@ -181,6 +186,10 @@ export default function FlowContent() {
 
     useEffect(() => {
         fetchFormFieldData();
+        const storedSessions = localStorage.getItem("flowTestingSessions");
+        if (storedSessions) {
+            setExistingSessions(JSON.parse(storedSessions));
+        }
     }, []);
 
     function fetchSessionData(sessId: string) {
@@ -240,35 +249,67 @@ export default function FlowContent() {
             case 0:
                 return (
                     <div className="flex flex-1 w-full">
-                        <div className="sm:w-[60%] p-2 bg-white rounded-sm border">
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between">
-                                    {/* Left side: heading + optional beta tag */}
-                                    <div className="flex items-center gap-2">
-                                        <h1 className="text-lg font-semibold mb-2">
-                                            {"Scenario testing"}
-                                        </h1>
-                                    </div>
+                        <div className="sm:w-[60%] p-2 rounded-sm border bg-white">
+                            <div className="rounded-2xl border border-sky-100 bg-white overflow-hidden">
+                                <div className="px-5 py-4 bg-gradient-to-r from-sky-600 to-sky-500">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                                                <svg
+                                                    className="w-4 h-4 text-white"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    stroke="currentColor"
+                                                    strokeWidth={2}
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        d="M12 4v16m8-8H4"
+                                                    />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h1 className="font-semibold text-white text-base leading-tight">
+                                                    Create a new Session
+                                                </h1>
+                                                <p className="text-sky-200 text-xs mt-0.5">
+                                                    Fill the details to begin flow testing.
+                                                </p>
+                                            </div>
+                                        </div>
 
-                                    <button
-                                        onClick={() => navigate(ROUTES.HISTORY)}
-                                        className="flex items-center gap-2 px-4 py-2 bg-sky-500 text-white rounded-xl hover:bg-sky-600 transition shadow-sm"
-                                    >
-                                        <LuHistory className="w-6 h-6 text-white" />
-                                        <span className="font-medium text-lg">Past Sessions</span>
-                                    </button>
+                                        <button
+                                            onClick={() => navigate(ROUTES.HISTORY)}
+                                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white text-md font-medium transition-colors"
+                                        >
+                                            <LuHistory className="w-4 h-4 text-white" />
+                                            <span>Past Reports</span>
+                                        </button>
+                                    </div>
                                 </div>
-                                <p className="text-gray-600 text-sm">
-                                    Please fill in the details below to begin flow testing.
-                                </p>
+
+                                <div className="px-4 py-4 bg-slate-50/40">
+                                    <InitialFlowForm
+                                        formData={formData}
+                                        onSubmitHandler={onSubmitHandler}
+                                        dynamicList={dynamicList}
+                                        setDyanmicValue={setDyanmicValue}
+                                        dynamicValue={dynamicValue}
+                                        setDynamicList={setDynamicList}
+                                    />
+                                </div>
                             </div>
-                            <InitialFlowForm
-                                formData={formData}
-                                onSubmitHandler={onSubmitHandler}
-                                dynamicList={dynamicList}
-                                setDyanmicValue={setDyanmicValue}
-                                dynamicValue={dynamicValue}
-                                setDynamicList={setDynamicList}
+                            <PreviousSessionsPanel
+                                sessions={existingSessions}
+                                onSessionsChange={setExistingSessions}
+                                onOpenSession={(selectedSession) =>
+                                    openSessionInNewTab(
+                                        selectedSession.sessionId,
+                                        selectedSession.subscriberUrl,
+                                        selectedSession.role
+                                    )
+                                }
                             />
                         </div>
                         <div className="w-full sm:w-[40%] ml-1">
@@ -304,4 +345,10 @@ export default function FlowContent() {
             </div>
         </>
     );
+}
+
+function openSessionInNewTab(sessionId: string, subscriberUrl: string, role: string) {
+    const currentUrl = window.location.origin;
+    const newTabUrl = `${currentUrl}/flow-testing?sessionId=${sessionId}&subscriberUrl=${encodeURIComponent(subscriberUrl)}&role=${role}`;
+    window.open(newTabUrl, "_blank");
 }
