@@ -21,8 +21,19 @@ const FLOWS_WITH_ADD_ITEM_BUTTON: string[] = [
 
 type CatalogAddOn = { id: string };
 type CatalogItem = { id: string; parent_item_id?: string; add_ons?: CatalogAddOn[] };
-type CatalogFulfillment = { id: string };
-type CatalogProvider = { id: string; fulfillments: CatalogFulfillment[]; items?: CatalogItem[] };
+type CatalogFulfillmentStop = {
+    type: string;
+    instructions?: Record<string, unknown>;
+    time?: Record<string, unknown>;
+};
+type CatalogFulfillment = {
+    id: string;
+    type?: string;
+    stops?: CatalogFulfillmentStop[];
+    agent?: Record<string, unknown>;
+    vehicle?: Record<string, unknown>;
+};
+type CatalogProvider = { id: string; items?: CatalogItem[]; fulfillments?: CatalogFulfillment[] };
 type OnSearchPayload = { message?: { catalog?: { providers?: CatalogProvider[] } } };
 
 type FormItem = {
@@ -35,9 +46,8 @@ type FormItem = {
 
 type FormValues = {
     provider: string;
-    fulfillment?: string;
-    timestamp?: string;
     items: FormItem[];
+    fulfillmentId: string;
 };
 
 export default function TRVSelect({
@@ -53,8 +63,8 @@ export default function TRVSelect({
     const { control, handleSubmit, watch, register, setValue, getValues } = useForm<FormValues>({
         defaultValues: {
             provider: "",
-            timestamp: "",
             items: [{ itemId: "", count: 1, addOns: [], addOnsQuantity: 1 }],
+            fulfillmentId: "",
         },
     });
 
@@ -65,13 +75,26 @@ export default function TRVSelect({
 
     const selectedItems = watch("items");
     const [itemOptions, setItemOptions] = useState<ExtractedItem[]>([]);
+    const [fulfillmentOptions, setFulfillmentOptions] = useState<CatalogFulfillment[]>([]);
 
     const onSubmit = async (data: FormValues) => {
-        // Convert timestamp to ISO format if present
-        if (data.timestamp) {
-            data.timestamp = new Date(data.timestamp).toISOString();
-        }
-        await submitEvent({ jsonPath: {}, formData: data as unknown as Record<string, string> });
+        const selectedFulfillment = fulfillmentOptions.find((f) => f.id === data.fulfillmentId);
+        const output = {
+            provider: data.provider,
+            items: data.items,
+            fulfillments: selectedFulfillment
+                ? [
+                      {
+                          id: selectedFulfillment.id,
+                          stops: (selectedFulfillment.stops || []).map((stop) => ({
+                              type: stop.type,
+                              time: stop.time,
+                          })),
+                      },
+                  ]
+                : [],
+        };
+        await submitEvent({ jsonPath: {}, formData: output as unknown as Record<string, string> });
     };
 
     const handlePaste = (payload: unknown) => {
@@ -83,15 +106,16 @@ export default function TRVSelect({
             const providers = parsed.message.catalog.providers;
 
             const results: ExtractedItem[] = [];
+            const allFulfillments: CatalogFulfillment[] = [];
 
             providers.forEach((provider: CatalogProvider) => {
                 const providerId = provider.id;
-                const fulfillmentId = provider.fulfillments[0]!.id;
-                if (!fulfillmentId) return;
+
+                if (provider.fulfillments) {
+                    allFulfillments.push(...provider.fulfillments);
+                }
 
                 if (!provider.items) return;
-
-                setValue("fulfillment", provider.fulfillments[0]!.id);
 
                 provider.items.forEach((item: CatalogItem) => {
                     if (item.parent_item_id) {
@@ -106,6 +130,7 @@ export default function TRVSelect({
             });
 
             setItemOptions(results);
+            setFulfillmentOptions(allFulfillments);
         } catch (err) {
             setErrorWhilePaste("Invalid payload structure.");
             toast.error("Invalid payload structure. Please check the pasted data.");
@@ -287,13 +312,29 @@ export default function TRVSelect({
                     )}
                 </div>
 
-                <div className={fieldWrapperStyle}>
-                    <label className={labelStyle}>Timestamp</label>
-                    <input
-                        type="datetime-local"
-                        {...register("timestamp")}
-                        className={inputStyle}
-                    />
+                {/* Fulfillment Selection */}
+                <div className="border p-3 rounded space-y-2">
+                    <div className={fieldWrapperStyle}>
+                        <label className={labelStyle}>Select Fulfillment</label>
+                        {fulfillmentOptions.length === 0 ? (
+                            <input
+                                type="text"
+                                {...register("fulfillmentId")}
+                                placeholder="Fulfillment ID"
+                                className={inputStyle}
+                            />
+                        ) : (
+                            <select {...register("fulfillmentId")} className={inputStyle}>
+                                <option value="">Select Fulfillment...</option>
+                                {fulfillmentOptions.map((f) => (
+                                    <option key={f.id} value={f.id}>
+                                        {f.id}
+                                        {f.type ? ` (${f.type})` : ""}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
                 </div>
 
                 <button
@@ -306,55 +347,3 @@ export default function TRVSelect({
         </div>
     );
 }
-
-// type FormData = {
-//   provider: string;
-//   provider_location: string[];
-//   location_gps: string;
-//   location_pin_code: string;
-//   items: {
-//     itemId: string;
-//     quantity: number;
-//     location: string;
-//   }[];
-//   [key: string]: any; // to allow dynamic offer keys like offers_FLAT50
-// };
-
-// function validateFormData(data: FormData): {
-//   valid: boolean;
-//   errors: string[];
-// } {
-//   const errors: string[] = [];
-
-//   for (const key in data) {
-//     if (data[key] === undefined || data[key] === null || data[key] === "") {
-//       errors.push(`Field ${key} cannot be empty.`);
-//     }
-//   }
-
-//   // Rule 1: At least 2 items
-//   if (!data.items || data.items.length < 2) {
-//     errors.push("At least 2 items must be selected.");
-//   }
-
-//   // Rule 2: All items must be unique
-//   const itemIds = data.items.map((item) => item.itemId);
-//   const uniqueItemIds = new Set(itemIds);
-//   if (itemIds.length !== uniqueItemIds.size) {
-//     errors.push("All selected items must be unique.");
-//   }
-
-//   // Rule 3: Only one offer can be selected (non-falsy)
-//   const offerKeys = Object.keys(data).filter((key) =>
-//     key.startsWith("offers_")
-//   );
-//   const selectedOffers = offerKeys.filter((key) => Boolean(data[key]));
-//   if (selectedOffers.length > 1) {
-//     errors.push("Only one offer can be selected.");
-//   }
-
-//   return {
-//     valid: errors.length === 0,
-//     errors,
-//   };
-// }
