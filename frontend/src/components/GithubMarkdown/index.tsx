@@ -12,6 +12,7 @@ import {
     ArrowsPointingInIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/Shadcn/Button";
+import MermaidBlock from "./MermaidBlock";
 
 interface GithubMarkdownProps {
     content: string;
@@ -135,6 +136,10 @@ const PreBlock: FC<{ children?: React.ReactNode }> = ({ children }) => {
 
 const components: Components = {
     pre({ children }) {
+        const lang = extractLang(children);
+        if (lang === "mermaid") {
+            return <MermaidBlock source={extractText(children).replace(/\n$/, "")} />;
+        }
         return <PreBlock>{children}</PreBlock>;
     },
     code({ className, children }) {
