@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { ComboBoxControl } from "@components/Shadcn/ComboBox";
+import { ComboBoxControl, ComboBoxMultiControl } from "@components/Shadcn/ComboBox";
 import { Button } from "@components/Shadcn/Button";
 import TextField from "@components/Shadcn/TextField";
 import PayloadEditor from "@components/PayloadEditor/PastePayloadModal";
@@ -20,8 +20,9 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
     const [isPayloadEditorActive, setIsPayloadEditorActive] = useState(false);
     const [errorWhilePaste, setErrorWhilePaste] = useState("");
     const [availableItems, setAvailableItems] = useState<IHotelCatalogItem[]>([]);
+    const [locationDetailsMap, setLocationDetailsMap] = useState<Record<string, string>>({});
 
-    const { control, handleSubmit, watch, reset, register, getValues } = useForm<IHotel201FormData>(
+    const { control, handleSubmit, watch, reset, getValues, setValue } = useForm<IHotel201FormData>(
         {
             defaultValues: DEFAULT_HOTEL_201_FORM_DATA,
         }
@@ -30,6 +31,10 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
     const selectedItemId = watch("item_id");
     const selectedItem = availableItems.find((item) => item.id === selectedItemId);
     const availableAddons = selectedItem?.addOns || [];
+    const availableLocationIds =
+        selectedItem?.locationIds && selectedItem.locationIds.length > 0
+            ? selectedItem.locationIds
+            : Object.keys(locationDetailsMap);
 
     const handlePaste = (payload: Record<string, unknown>) => {
         try {
@@ -73,6 +78,17 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
 
             setAvailableItems(catalogItems);
 
+            const rawLocations = (provider.locations || []) as Record<string, unknown>[];
+            const locMap: Record<string, string> = {};
+            rawLocations.forEach((loc) => {
+                const id = (loc.id as string) || "";
+                const addr = (loc.address as string) || "";
+                const city = ((loc.city as Record<string, unknown>)?.name as string) || "";
+                const details = [addr, city].filter(Boolean).join(", ");
+                locMap[id] = details ? `${id} - ${details}` : id;
+            });
+            setLocationDetailsMap(locMap);
+
             const firstItem = catalogItems[0];
             if (!firstItem) {
                 throw new Error("No items found in catalog");
@@ -107,6 +123,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                 provider_id: (provider.id as string) || "",
                 providerId: (provider.id as string) || "",
                 locationId: firstItem.locationIds[0] || "",
+                location_ids: firstItem.locationIds || [],
                 item_id: firstItem.id,
                 quantity: 1,
                 start_time: defaultStartTime,
@@ -140,6 +157,21 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         };
 
         const effectiveProviderId = data.provider_id || data.providerId || "";
+        const currentItem = availableItems.find((item) => item.id === data.item_id);
+
+        let resolvedLocationIds: string[] = [];
+        if (Array.isArray(data.location_ids) && data.location_ids.length > 0) {
+            resolvedLocationIds = data.location_ids;
+        } else if (typeof data.location_ids === "string" && data.location_ids.trim()) {
+            resolvedLocationIds = data.location_ids
+                .split(",")
+                .map((s) => s.trim())
+                .filter(Boolean);
+        } else if (currentItem?.locationIds && currentItem.locationIds.length > 0) {
+            resolvedLocationIds = currentItem.locationIds;
+        } else if (data.locationId) {
+            resolvedLocationIds = [data.locationId];
+        }
 
         const selectPayload = {
             context: {
@@ -165,7 +197,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             items: [
                 {
                     id: data.item_id,
-                    location_ids: data.locationId ? [data.locationId] : [],
+                    location_ids: resolvedLocationIds,
                     quantity: {
                         selected: {
                             count: Number(data.quantity) || 1,
@@ -201,6 +233,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             "$.context.location.city.code": data.city_code || "std:080",
             "$.message.order.provider.id": effectiveProviderId,
             "$.message.order.items[0].id": data.item_id,
+            "$.message.order.items[0].location_ids": resolvedLocationIds,
             "$.message.order.items[0].quantity.selected.count": Number(data.quantity) || 1,
             "$.message.order.provider.time.range.start": formatIso(data.start_time),
             "$.message.order.provider.time.range.end": formatIso(data.end_time),
@@ -218,8 +251,9 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             city_code: data.city_code || "std:080",
             provider_id: effectiveProviderId,
             providerId: effectiveProviderId,
-            location_id: data.locationId || "",
-            locationId: data.locationId || "",
+            location_ids: resolvedLocationIds,
+            location_id: resolvedLocationIds[0] || "",
+            locationId: resolvedLocationIds[0] || "",
             item_id: data.item_id,
             quantity: String(data.quantity),
             start_time: data.start_time,
@@ -244,6 +278,11 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
     const addonOptions = availableAddons.map((addon) => ({
         value: addon.id,
         label: `${addon.name} (${addon.id})`,
+    }));
+
+    const locationOptions = availableLocationIds.map((locId) => ({
+        value: locId,
+        label: locationDetailsMap[locId] || locId,
     }));
 
     return (
@@ -309,7 +348,17 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                                     label="Item ID"
                                     required
                                     value={field.value}
-                                    onValueChange={field.onChange}
+                                    onValueChange={(val) => {
+                                        field.onChange(val);
+                                        const foundItem = availableItems.find(
+                                            (it) => it.id === val
+                                        );
+                                        if (foundItem) {
+                                            setValue("locationId", foundItem.locationIds[0] || "");
+                                            setValue("location_ids", foundItem.locationIds || []);
+                                            setValue("add_on_id", foundItem.addOns?.[0]?.id || "");
+                                        }
+                                    }}
                                     options={itemOptions}
                                     placeholder="Select a room/item"
                                 />
@@ -323,6 +372,55 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                             required
                             placeholder="Enter item id (from on_search catalog)"
                             rules={{ required: "Item ID is required" }}
+                        />
+                    )}
+
+                    {availableItems.length > 0 ? (
+                        <Controller
+                            name="location_ids"
+                            control={control}
+                            rules={{
+                                validate: (val) =>
+                                    (Array.isArray(val) && val.length > 0) ||
+                                    (typeof val === "string" && val.trim().length > 0) ||
+                                    "At least one location ID is required",
+                            }}
+                            render={({ field, fieldState }) => (
+                                <ComboBoxMultiControl
+                                    label="Location IDs"
+                                    required
+                                    value={Array.isArray(field.value) ? field.value : []}
+                                    onValueChange={field.onChange}
+                                    options={locationOptions}
+                                    placeholder="Select location IDs"
+                                    error={fieldState.error?.message}
+                                />
+                            )}
+                        />
+                    ) : (
+                        <Controller
+                            name="location_ids"
+                            control={control}
+                            render={({ field }) => (
+                                <TextField
+                                    control={control}
+                                    name="location_ids"
+                                    label="Location IDs (comma-separated)"
+                                    placeholder="e.g. L1, L2"
+                                    value={
+                                        Array.isArray(field.value)
+                                            ? field.value.join(", ")
+                                            : field.value || ""
+                                    }
+                                    onChange={(e) => {
+                                        const parts = e.target.value
+                                            .split(",")
+                                            .map((s: string) => s.trim())
+                                            .filter(Boolean);
+                                        field.onChange(parts);
+                                    }}
+                                />
+                            )}
                         />
                     )}
 
@@ -408,8 +506,6 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                         type="number"
                     />
                 </div>
-
-                <input type="hidden" {...register("locationId")} />
             </FormDialogShell>
         </>
     );
