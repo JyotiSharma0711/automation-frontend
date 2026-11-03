@@ -104,6 +104,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
 
             reset({
                 city_code: getValues("city_code") || "std:080",
+                provider_id: (provider.id as string) || "",
                 providerId: (provider.id as string) || "",
                 locationId: firstItem.locationIds[0] || "",
                 item_id: firstItem.id,
@@ -138,6 +139,8 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             }
         };
 
+        const effectiveProviderId = data.provider_id || data.providerId || "";
+
         const selectPayload = {
             context: {
                 location: {
@@ -147,7 +150,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                 },
             },
             provider: {
-                id: data.providerId || "",
+                id: effectiveProviderId,
                 ...(data.start_time || data.end_time
                     ? {
                           time: {
@@ -196,6 +199,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
 
         const jsonPath: Record<string, unknown> = {
             "$.context.location.city.code": data.city_code || "std:080",
+            "$.message.order.provider.id": effectiveProviderId,
             "$.message.order.items[0].id": data.item_id,
             "$.message.order.items[0].quantity.selected.count": Number(data.quantity) || 1,
             "$.message.order.provider.time.range.start": formatIso(data.start_time),
@@ -212,6 +216,10 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
 
         const formData: Record<string, unknown> = {
             city_code: data.city_code || "std:080",
+            provider_id: effectiveProviderId,
+            providerId: effectiveProviderId,
+            location_id: data.locationId || "",
+            locationId: data.locationId || "",
             item_id: data.item_id,
             quantity: String(data.quantity),
             start_time: data.start_time,
@@ -219,8 +227,6 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             ...(data.add_on_id ? { add_on_id: data.add_on_id } : {}),
             adults_count: String(data.adults_count ?? 1),
             children_count: String(data.children_count ?? 0),
-            provider_id: data.providerId || "",
-            location_id: data.locationId || "",
             data: JSON.stringify(selectPayload),
         };
 
@@ -283,6 +289,15 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                     )}
                 >
                     <h3 className="font-semibold text-text-primary">Room Selection</h3>
+
+                    <TextField
+                        control={control}
+                        name="provider_id"
+                        label="Provider ID"
+                        required
+                        placeholder="Enter provider id (from on_search catalog)"
+                        rules={{ required: "Provider ID is required" }}
+                    />
 
                     {availableItems.length > 0 ? (
                         <Controller
@@ -394,7 +409,6 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                     />
                 </div>
 
-                <input type="hidden" {...register("providerId")} />
                 <input type="hidden" {...register("locationId")} />
             </FormDialogShell>
         </>
