@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-import { ComboBoxControl, ComboBoxMultiControl } from "@components/Shadcn/ComboBox";
+import { ComboBoxMultiControl } from "@components/Shadcn/ComboBox";
 import { Button } from "@components/Shadcn/Button";
 import TextField from "@components/Shadcn/TextField";
 import PayloadEditor from "@components/PayloadEditor/PastePayloadModal";
@@ -162,11 +162,6 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         let resolvedLocationIds: string[] = [];
         if (Array.isArray(data.location_ids) && data.location_ids.length > 0) {
             resolvedLocationIds = data.location_ids;
-        } else if (typeof data.location_ids === "string" && data.location_ids.trim()) {
-            resolvedLocationIds = data.location_ids
-                .split(",")
-                .map((s) => s.trim())
-                .filter(Boolean);
         } else if (currentItem?.locationIds && currentItem.locationIds.length > 0) {
             resolvedLocationIds = currentItem.locationIds;
         } else if (data.locationId) {
@@ -270,16 +265,6 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         });
     };
 
-    const itemOptions = availableItems.map((item) => ({
-        value: item.id,
-        label: `${item.name} (${item.id})`,
-    }));
-
-    const addonOptions = availableAddons.map((addon) => ({
-        value: addon.id,
-        label: `${addon.name} (${addon.id})`,
-    }));
-
     const locationOptions = availableLocationIds.map((locId) => ({
         value: locId,
         label: locationDetailsMap[locId] || locId,
@@ -338,18 +323,22 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                         rules={{ required: "Provider ID is required" }}
                     />
 
-                    {availableItems.length > 0 ? (
-                        <Controller
-                            name="item_id"
-                            control={control}
-                            rules={{ required: "Item ID is required" }}
-                            render={({ field }) => (
-                                <ComboBoxControl
-                                    label="Item ID"
-                                    required
-                                    value={field.value}
-                                    onValueChange={(val) => {
-                                        field.onChange(val);
+                    {availableItems.length > 0 && (
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-text-secondary">
+                                Select Room from Catalog
+                            </label>
+                            <select
+                                className="w-full rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                value={
+                                    availableItems.some((it) => it.id === watch("item_id"))
+                                        ? watch("item_id")
+                                        : ""
+                                }
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val) {
+                                        setValue("item_id", val, { shouldValidate: true });
                                         const foundItem = availableItems.find(
                                             (it) => it.id === val
                                         );
@@ -358,71 +347,48 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                                             setValue("location_ids", foundItem.locationIds || []);
                                             setValue("add_on_id", foundItem.addOns?.[0]?.id || "");
                                         }
-                                    }}
-                                    options={itemOptions}
-                                    placeholder="Select a room/item"
-                                />
-                            )}
-                        />
-                    ) : (
-                        <TextField
-                            control={control}
-                            name="item_id"
-                            label="Item ID"
-                            required
-                            placeholder="Enter item id (from on_search catalog)"
-                            rules={{ required: "Item ID is required" }}
-                        />
+                                    }
+                                }}
+                            >
+                                <option value="">-- Choose a room from catalog --</option>
+                                {availableItems.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name} ({item.id})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     )}
 
-                    {availableItems.length > 0 ? (
-                        <Controller
-                            name="location_ids"
-                            control={control}
-                            rules={{
-                                validate: (val) =>
-                                    (Array.isArray(val) && val.length > 0) ||
-                                    (typeof val === "string" && val.trim().length > 0) ||
-                                    "At least one location ID is required",
-                            }}
-                            render={({ field, fieldState }) => (
-                                <ComboBoxMultiControl
-                                    label="Location IDs"
-                                    required
-                                    value={Array.isArray(field.value) ? field.value : []}
-                                    onValueChange={field.onChange}
-                                    options={locationOptions}
-                                    placeholder="Select location IDs"
-                                    error={fieldState.error?.message}
-                                />
-                            )}
-                        />
-                    ) : (
-                        <Controller
-                            name="location_ids"
-                            control={control}
-                            render={({ field }) => (
-                                <TextField
-                                    control={control}
-                                    name="location_ids"
-                                    label="Location IDs (comma-separated)"
-                                    placeholder="e.g. L1, L2"
-                                    value={
-                                        Array.isArray(field.value)
-                                            ? field.value.join(", ")
-                                            : field.value || ""
-                                    }
-                                    onChange={(e) => {
-                                        const parts = e.target.value
-                                            .split(",")
-                                            .map((s: string) => s.trim())
-                                            .filter(Boolean);
-                                        field.onChange(parts);
-                                    }}
-                                />
-                            )}
-                        />
-                    )}
+                    <TextField
+                        control={control}
+                        name="item_id"
+                        label="Item ID"
+                        required
+                        placeholder="Enter item id (from on_search catalog)"
+                        rules={{ required: "Item ID is required" }}
+                    />
+
+                    <Controller
+                        name="location_ids"
+                        control={control}
+                        rules={{
+                            validate: (val) =>
+                                (Array.isArray(val) && val.length > 0) ||
+                                "At least one location ID is required",
+                        }}
+                        render={({ field, fieldState }) => (
+                            <ComboBoxMultiControl
+                                label="Location IDs"
+                                required
+                                value={Array.isArray(field.value) ? field.value : []}
+                                onValueChange={field.onChange}
+                                options={locationOptions}
+                                placeholder="Select location IDs"
+                                error={fieldState.error?.message}
+                            />
+                        )}
+                    />
 
                     <TextField
                         control={control}
@@ -433,28 +399,38 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                         rules={{ required: "Quantity is required" }}
                     />
 
-                    {availableAddons.length > 0 ? (
-                        <Controller
-                            name="add_on_id"
-                            control={control}
-                            render={({ field }) => (
-                                <ComboBoxControl
-                                    label="Add-On (optional)"
-                                    value={field.value || ""}
-                                    onValueChange={field.onChange}
-                                    options={addonOptions}
-                                    placeholder="No add-on"
-                                />
-                            )}
-                        />
-                    ) : (
-                        <TextField
-                            control={control}
-                            name="add_on_id"
-                            label="Add-On (optional)"
-                            placeholder="Enter add-on id (optional)"
-                        />
+                    {availableAddons.length > 0 && (
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-text-secondary">
+                                Select Add-On from Catalog
+                            </label>
+                            <select
+                                className="w-full rounded-md border border-border-default bg-surface-base px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                value={
+                                    availableAddons.some((it) => it.id === watch("add_on_id"))
+                                        ? watch("add_on_id")
+                                        : ""
+                                }
+                                onChange={(e) => {
+                                    setValue("add_on_id", e.target.value, { shouldValidate: true });
+                                }}
+                            >
+                                <option value="">-- Choose an add-on --</option>
+                                {availableAddons.map((addon) => (
+                                    <option key={addon.id} value={addon.id}>
+                                        {addon.name} ({addon.id})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     )}
+
+                    <TextField
+                        control={control}
+                        name="add_on_id"
+                        label="Add-On (optional)"
+                        placeholder="Enter add-on id (optional)"
+                    />
                 </div>
 
                 <div
