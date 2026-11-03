@@ -16,6 +16,7 @@ export interface IHotelCatalogItem {
 }
 
 export interface IHotel201FormData {
+    city_code: string;
     item_id: string;
     quantity: number | string;
     start_time: string;
@@ -32,6 +33,7 @@ export interface IHotel201SelectProps {
 }
 
 export const DEFAULT_HOTEL_201_FORM_DATA: IHotel201FormData = {
+    city_code: "std:080",
     item_id: "",
     quantity: 1,
     start_time: "",

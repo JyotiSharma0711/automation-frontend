@@ -21,9 +21,11 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
     const [errorWhilePaste, setErrorWhilePaste] = useState("");
     const [availableItems, setAvailableItems] = useState<IHotelCatalogItem[]>([]);
 
-    const { control, handleSubmit, watch, reset, register } = useForm<IHotel201FormData>({
-        defaultValues: DEFAULT_HOTEL_201_FORM_DATA,
-    });
+    const { control, handleSubmit, watch, reset, register, getValues } = useForm<IHotel201FormData>(
+        {
+            defaultValues: DEFAULT_HOTEL_201_FORM_DATA,
+        }
+    );
 
     const selectedItemId = watch("item_id");
     const selectedItem = availableItems.find((item) => item.id === selectedItemId);
@@ -101,6 +103,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                 formatToDateStr(endTimeRaw) || nextDay.toISOString().split("T")[0];
 
             reset({
+                city_code: getValues("city_code") || "std:080",
                 providerId: (provider.id as string) || "",
                 locationId: firstItem.locationIds[0] || "",
                 item_id: firstItem.id,
@@ -136,6 +139,13 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         };
 
         const selectPayload = {
+            context: {
+                location: {
+                    city: {
+                        code: data.city_code || "std:080",
+                    },
+                },
+            },
             provider: {
                 id: data.providerId || "",
                 ...(data.start_time || data.end_time
@@ -185,6 +195,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         };
 
         const jsonPath: Record<string, unknown> = {
+            "$.context.location.city.code": data.city_code || "std:080",
             "$.message.order.items[0].id": data.item_id,
             "$.message.order.items[0].quantity.selected.count": Number(data.quantity) || 1,
             "$.message.order.provider.time.range.start": formatIso(data.start_time),
@@ -200,6 +211,7 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
         }
 
         const formData: Record<string, unknown> = {
+            city_code: data.city_code || "std:080",
             item_id: data.item_id,
             quantity: String(data.quantity),
             start_time: data.start_time,
@@ -207,6 +219,8 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
             ...(data.add_on_id ? { add_on_id: data.add_on_id } : {}),
             adults_count: String(data.adults_count ?? 1),
             children_count: String(data.children_count ?? 0),
+            provider_id: data.providerId || "",
+            location_id: data.locationId || "",
             data: JSON.stringify(selectPayload),
         };
 
@@ -245,6 +259,23 @@ export default function TRV13_201HotelSelectForm({ submitEvent }: IHotel201Selec
                 />
 
                 {errorWhilePaste && <p className="text-sm text-destructive">{errorWhilePaste}</p>}
+
+                <div
+                    className={cn(
+                        "space-y-4 rounded-lg border border-border-default bg-surface-muted/20 p-4"
+                    )}
+                >
+                    <h3 className="font-semibold text-text-primary">Location Details</h3>
+
+                    <TextField
+                        control={control}
+                        name="city_code"
+                        label="City Code"
+                        required
+                        placeholder="Enter city code (e.g. std:080)"
+                        rules={{ required: "City code is required" }}
+                    />
+                </div>
 
                 <div
                     className={cn(
