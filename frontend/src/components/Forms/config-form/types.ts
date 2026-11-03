@@ -65,7 +65,8 @@ export interface FormFieldConfigType {
         | "trv11_200_metro_select"
         | "trv11_210_common_item_fulfillment_select"
         | "trv14_search_incremental_pull_form"
-        | "trv14_select";
+        | "trv14_select"
+        | "trv13_201_select";
 
     payloadField: string;
     values?: string[];
