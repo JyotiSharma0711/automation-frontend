@@ -146,6 +146,7 @@ jobs:
             VITE_DEVELOPER_GUIDE_BACKEND_URL=${{ vars.VITE_DEVELOPER_GUIDE_BACKEND_URL }}
             VITE_ENABLE_DEV_GUIDE=${{ vars.VITE_ENABLE_DEV_GUIDE }}
             VITE_ENVIRONMENT=${{ vars.VITE_ENVIRONMENT }}
+            VITE_ONDC_PORTAL_URL=${{ vars.VITE_ONDC_PORTAL_URL }}
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
 

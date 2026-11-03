@@ -5,6 +5,7 @@ import { isUseCaseEnabled } from "../utils";
 export const GETTING_STARTED_SECTIONS = [
     { id: "understanding-ondc", label: "Understanding ONDC" },
     { id: "learn-about-ondc", label: "Learn about ONDC" },
+    { id: "start-your-ondc-journey", label: "Start your ONDC journey" },
     { id: "start-with-a-use-case", label: "Start with a use case" },
     { id: "common-paths", label: "Common paths" },
     { id: "start-exploring", label: "Start exploring" },
