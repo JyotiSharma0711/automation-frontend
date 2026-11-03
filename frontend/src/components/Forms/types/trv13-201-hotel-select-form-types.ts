@@ -41,7 +41,7 @@ export interface IHotel201FormData {
     children_count: number | string;
     providerId?: string;
     locationId?: string;
-    location_ids?: string[] | string;
+    location_ids?: string[];
 }
 
 export interface IHotel201SelectProps {
