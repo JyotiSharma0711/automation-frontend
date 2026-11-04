@@ -75,11 +75,17 @@ const TableOfContents: FC<TableOfContentsProps> = ({
                                     onClick={() => handleClick(entry.id)}
                                     title={entry.text}
                                     className={[
-                                        "h-auto flex-1 justify-start text-left text-sm leading-snug font-normal rounded py-1.5 pr-2 transition-colors truncate",
-                                        entry.level === 3 ? "pl-5" : "pl-3",
+                                        "h-auto flex-1 justify-start text-left leading-snug rounded transition-colors truncate",
+                                        entry.level === 3
+                                            ? "pl-5 py-1 text-xs font-normal"
+                                            : "pl-3 py-1.5 text-sm font-medium",
                                         isActive
-                                            ? "bg-sky-50 text-sky-800 font-semibold"
-                                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+                                            ? entry.level === 3
+                                                ? "bg-sky-50 text-sky-800 font-medium"
+                                                : "bg-sky-50 text-sky-800 font-semibold"
+                                            : entry.level === 3
+                                                ? "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                                                : "text-slate-700 hover:bg-slate-100 hover:text-slate-900",
                                     ].join(" ")}
                                 >
                                     {entry.text}

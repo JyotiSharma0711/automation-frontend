@@ -1,4 +1,10 @@
-import { FC, useCallback, useMemo, type ReactNode } from "react";
+import {
+    FC,
+    useCallback,
+    useMemo,
+    type CSSProperties,
+    type ReactNode,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import {
     ChevronRightIcon,
@@ -415,7 +421,12 @@ const DeveloperGuideGettingStartedContent: FC = () => {
                         ? "mr-4 mt-4 mb-4 max-w-80 opacity-100"
                         : "mr-0 max-w-0 opacity-0 pointer-events-none"
                 )}
-                style={{ top: tocOffset, height: `calc(100vh - ${tocOffset}px)` }}
+                style={
+                    {
+                        top: tocOffset,
+                        height: `calc(100vh - ${tocOffset}px)`,
+                    } as unknown as CSSProperties
+                }
             >
                 <div className="h-full w-80">
                     <CommentsPanel

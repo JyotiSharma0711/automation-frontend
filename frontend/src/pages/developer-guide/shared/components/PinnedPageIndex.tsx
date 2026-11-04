@@ -310,11 +310,17 @@ const PageIndexLink: FC<PageIndexLinkProps> = ({ id, label, isActive, indent, on
             onClick={() => onClick(id)}
             title={label}
             className={cn(
-                "h-auto flex-1 justify-start text-left text-sm leading-snug font-normal rounded py-1.5 pr-2 transition-colors truncate",
-                indent ? "pl-5" : "pl-3",
+                "h-auto flex-1 justify-start text-left leading-snug rounded transition-colors truncate",
+                indent
+                    ? "pl-5 py-1 text-xs font-normal"
+                    : "pl-3 py-1.5 text-sm font-medium",
                 isActive
-                    ? "bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 font-semibold"
-                    : "text-slate-600 dark:text-n-30 hover:bg-slate-100 dark:hover:bg-surface-muted hover:text-slate-900 dark:hover:text-n-10"
+                    ? indent
+                        ? "bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 font-medium"
+                        : "bg-sky-50 dark:bg-sky-500/10 text-sky-800 dark:text-sky-300 font-semibold"
+                    : indent
+                        ? "text-slate-500 dark:text-n-40 hover:bg-slate-100 dark:hover:bg-surface-muted hover:text-slate-800 dark:hover:text-n-10"
+                        : "text-slate-700 dark:text-n-20 hover:bg-slate-100 dark:hover:bg-surface-muted hover:text-slate-900 dark:hover:text-n-10"
             )}
         >
             {label}
