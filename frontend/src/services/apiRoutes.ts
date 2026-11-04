@@ -89,6 +89,7 @@ export const API_ROUTES = {
         // LOGOUT: "/auth/logout",
         ME: "/auth/api/me",
         EXCHANGE: "/auth/exchange",
+        PROVIDER: "/auth/provider",
         SUBSCRIBE: "/auth/subscribe",
         LOOKUP: "/auth/lookup",
         GENERATE_KEYS: "/auth/api/generate-keys",

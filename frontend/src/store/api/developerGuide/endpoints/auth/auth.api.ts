@@ -8,7 +8,7 @@ import {
     setLoginPending,
     setToken,
 } from "@store/slices/authSlice";
-import type { IGetMeResponse, IExchangeCodeResponse } from "./types";
+import type { IGetMeResponse, IExchangeCodeResponse, ILoginProviderResponse } from "./types";
 
 /** Set when `exchangeCode` succeeds this page load — survives URL cleanup after navigate. */
 let oauthExchangeCompletedThisPageLoad = false;
@@ -47,6 +47,14 @@ export const authApi = devGuideApi.injectEndpoints({
                 }
             },
         }),
+        // Which login the login service has switched on (LOGIN_PROVIDER); rarely changes.
+        getLoginProvider: builder.query<ILoginProviderResponse, void>({
+            query: () => ({
+                url: API_ROUTES.AUTH.PROVIDER,
+                method: "GET",
+            }),
+            keepUnusedDataFor: 3600,
+        }),
         exchangeCode: builder.mutation<IExchangeCodeResponse, { code: string }>({
             query: ({ code }) => ({
                 url: API_ROUTES.AUTH.EXCHANGE,
@@ -74,4 +82,9 @@ export const authApi = devGuideApi.injectEndpoints({
     }),
 });
 
-export const { useGetMeQuery, useLazyGetMeQuery, useExchangeCodeMutation } = authApi;
+export const {
+    useGetMeQuery,
+    useLazyGetMeQuery,
+    useExchangeCodeMutation,
+    useGetLoginProviderQuery,
+} = authApi;

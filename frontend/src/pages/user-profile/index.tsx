@@ -8,6 +8,7 @@ import { resetActivityHistoryCount } from "@store/slices/profileShellSlice";
 import { useProfileCounts } from "@store/selectors/profileSelectors";
 import { ROUTES } from "@constants/routes";
 import { ProfileSidebar } from "@pages/user-profile/ProfileSidebar";
+import { getUserDisplayName } from "@/types/user";
 
 const UserProfileLayout = () => {
     const { user } = useAuth();
@@ -18,8 +19,12 @@ const UserProfileLayout = () => {
     }
 
     return (
-        <div className="flex min-h-[calc(100vh-4rem)] bg-surface-muted">
-            <ProfileSidebar username={user.username} avatarUrl={user.avatarUrl} counts={counts} />
+        <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-surface-muted md:flex-row">
+            <ProfileSidebar
+                username={getUserDisplayName(user)}
+                avatarUrl={user.avatarUrl}
+                counts={counts}
+            />
             <main className="flex-1 min-w-0 min-h-[calc(100vh-4rem)] bg-surface-elevated px-6">
                 <Outlet />
             </main>

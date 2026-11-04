@@ -53,6 +53,7 @@ export interface ScenarioPreferences {
     usecaseId: string;
     npType: string;
     env: string;
+    orgId: string;
 }
 
 export interface ScenarioPreferencesAPI {
@@ -62,6 +63,7 @@ export interface ScenarioPreferencesAPI {
     usecase_id: string;
     np_type: string;
     env: string;
+    org_id?: string;
 }
 
 export type IDomainVersionWithUsecase = {

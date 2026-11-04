@@ -5,4 +5,5 @@ export interface IScenarioPreferenceAPI {
     usecase_id: string;
     np_type: string;
     env: string;
+    org_id?: string;
 }

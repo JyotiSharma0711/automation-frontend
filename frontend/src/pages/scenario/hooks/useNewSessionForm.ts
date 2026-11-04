@@ -8,6 +8,7 @@ import {
     INewSessionFormValues,
 } from "@pages/scenario/types";
 import { trackSchemaValidationForm } from "@pages/scenario/helpers";
+import { useOrganisationOptions } from "@pages/scenario/OrganisationField";
 
 export function useNewSessionForm({
     domains,
@@ -27,6 +28,9 @@ export function useNewSessionForm({
     );
 
     const isLoggedIn = !!user?.githubId;
+
+    const orgOptions = useOrganisationOptions();
+    const [chosenOrgId, setChosenOrgId] = useState("");
 
     const {
         control,
@@ -113,15 +117,29 @@ export function useNewSessionForm({
         await onSubmit(data);
     };
 
-    const handleSavedConfigSubmit = async () => {
-        const cfg = savedPreferences[selectedSavedConfigKey];
-        if (!cfg || !savedUsecaseId) return;
-        await onSubmit({ ...cfg, usecaseId: savedUsecaseId });
-    };
-
     const selectedSavedConfig = selectedSavedConfigKey
         ? savedPreferences[selectedSavedConfigKey]
         : undefined;
+
+    // The organisation for a saved config is fixed to the one saved with it (if
+    // the user still belongs to it). Older configs saved without one take the
+    // user's pick, else their only organisation.
+    const isMemberOf = (orgId?: string) => !!orgId && orgOptions.some((o) => o.value === orgId);
+    const isSavedOrgLocked = isMemberOf(selectedSavedConfig?.orgId);
+    const savedOrgId = isSavedOrgLocked
+        ? selectedSavedConfig!.orgId!
+        : isMemberOf(chosenOrgId)
+          ? chosenOrgId
+          : orgOptions.length === 1
+            ? orgOptions[0].value
+            : "";
+
+    const handleSavedConfigSubmit = async () => {
+        const cfg = savedPreferences[selectedSavedConfigKey];
+        if (!cfg || !savedUsecaseId) return;
+        if (orgOptions.length > 0 && !savedOrgId) return;
+        await onSubmit({ ...cfg, usecaseId: savedUsecaseId, orgId: savedOrgId || undefined });
+    };
 
     const savedConfigUsecaseOptions = useMemo(() => {
         if (!selectedSavedConfig) return [];
@@ -135,6 +153,7 @@ export function useNewSessionForm({
     const handleConfigKeyChange = (key: string) => {
         setSelectedSavedConfigKey(key);
         setSavedUsecaseId(savedPreferences[key]?.usecaseId ?? "");
+        setChosenOrgId("");
     };
 
     return {
@@ -145,8 +164,11 @@ export function useNewSessionForm({
             selectedSavedConfig,
             savedUsecaseId,
             savedConfigUsecaseOptions,
+            savedOrgId,
+            isSavedOrgLocked,
             onConfigKeyChange: handleConfigKeyChange,
             onUsecaseChange: setSavedUsecaseId,
+            onOrgChange: setChosenOrgId,
             onSubmit: handleSavedConfigSubmit,
             onFillManually: () => setShowManualForm(true),
         },

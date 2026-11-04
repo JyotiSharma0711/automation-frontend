@@ -67,6 +67,7 @@ export const createSessionService = async (
 
     upsertSessionInDb(sessionId, {
       userId: data.userId,
+      orgId: data.orgId,
       npType,
       npId: subscriberUrl,
       usecaseId: usecaseId,

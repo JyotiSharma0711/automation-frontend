@@ -9,6 +9,7 @@ export const CONFIG_DISPLAY_NAME_MAP: Record<string, string> = {
 export const ENV_OPTIONS = ["PRE-PRODUCTION", "STAGING", "PRODUCTION"];
 
 export const PROFILE_NAV_ITEMS: IProfileNavItem[] = [
+    { label: "User profile", to: ROUTES.PROFILE_ACCOUNT },
     { label: "Configs", to: ROUTES.PROFILE, countKey: "configs" },
     { label: "Past reports", to: ROUTES.PROFILE_PAST_REPORTS, countKey: "pastReports" },
     { label: "Activity history", to: ROUTES.PROFILE_HISTORY },
@@ -16,6 +17,16 @@ export const PROFILE_NAV_ITEMS: IProfileNavItem[] = [
 ];
 
 export const PROFILE_PAGE_COPY = {
+    account: {
+        title: "User profile",
+        subtitle: "Your details from NP Portal. They are read-only here.",
+        readOnlyNote: "To change these details, update them on NP Portal and log in again.",
+        detailsTitle: "Account",
+        organisationsTitle: "Organisations",
+        noOrganisations: "NP Portal did not send any organisations for this account.",
+        githubNote:
+            "You logged in with GitHub. Log in via ONDC to see your NP Portal details and organisations.",
+    },
     configs: {
         title: "Configs",
         subtitle: "Your account, saved test configs, and report history in one place.",

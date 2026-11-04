@@ -62,4 +62,6 @@ export interface SessionCache {
     activeFlow: null | string;
     activeStep: number;
     userId?: string;
+    /** NP Portal organisation the session is run for (Login via ONDC only). */
+    orgId?: string;
 }

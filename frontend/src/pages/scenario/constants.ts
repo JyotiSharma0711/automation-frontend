@@ -66,6 +66,7 @@ export const DEFAULT_VALUES: INewSessionFormValues = {
     usecaseId: "",
     npType: "BAP",
     env: "PRE-PRODUCTION",
+    orgId: "",
     config: "",
 };
 

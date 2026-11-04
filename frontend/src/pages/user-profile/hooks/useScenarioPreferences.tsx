@@ -25,6 +25,7 @@ const EMPTY_PREFERENCES: ScenarioPreferences = {
     usecaseId: "",
     npType: "BAP",
     env: "PRE-PRODUCTION",
+    orgId: "",
 };
 
 const toAPI = (p: ScenarioPreferences): ScenarioPreferencesAPI => ({
@@ -34,6 +35,7 @@ const toAPI = (p: ScenarioPreferences): ScenarioPreferencesAPI => ({
     usecase_id: p.usecaseId,
     np_type: p.npType,
     env: p.env,
+    org_id: p.orgId || undefined,
 });
 
 const fromAPI = (p: ScenarioPreferencesAPI, configName: string): ScenarioPreferences => ({
@@ -44,6 +46,7 @@ const fromAPI = (p: ScenarioPreferencesAPI, configName: string): ScenarioPrefere
     usecaseId: p.usecase_id ?? "",
     npType: p.np_type,
     env: p.env,
+    orgId: p.org_id ?? "",
 });
 
 export const useScenarioPreferences = () => {
@@ -147,6 +150,7 @@ export const useScenarioPreferences = () => {
             usecaseId: config.usecaseId,
             npType: config.npType,
             env: config.env,
+            orgId: config.orgId,
         });
     };
 
@@ -156,7 +160,7 @@ export const useScenarioPreferences = () => {
     };
 
     const onSubmit = async (data: ScenarioPreferences) => {
-        const { domain, version, usecaseId, npType, env } = data;
+        const { domain, version, usecaseId, npType, env, orgId } = data;
         if (!domain || !version || !usecaseId || !npType) {
             toast.error("Please select domain, version, use case and app type");
             return;
@@ -170,6 +174,7 @@ export const useScenarioPreferences = () => {
             usecaseId,
             npType,
             env,
+            orgId,
         });
 
         setIsSaving(true);
@@ -185,6 +190,7 @@ export const useScenarioPreferences = () => {
                     usecaseId,
                     npType,
                     env,
+                    orgId,
                 },
             };
             setSavedPrefs(nextPrefs);

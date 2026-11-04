@@ -6,8 +6,8 @@ import { PROFILE_NAV_ITEMS } from "@pages/user-profile/constants";
 import type { IProfileSidebarProps } from "@pages/user-profile/types";
 
 export const ProfileSidebar = ({ username, avatarUrl, counts }: IProfileSidebarProps) => (
-    <aside className="sticky top-16 w-80 shrink-0 self-start">
-        <div className="px-10 py-6 text-center">
+    <aside className="w-full shrink-0 md:sticky md:top-16 md:w-80 md:self-start">
+        <div className="hidden px-10 py-6 text-center md:block">
             {avatarUrl ? (
                 <img
                     src={avatarUrl}
@@ -26,7 +26,8 @@ export const ProfileSidebar = ({ username, avatarUrl, counts }: IProfileSidebarP
             </p>
         </div>
 
-        <nav className="px-4 space-y-1">
+        {/* Phones and small tablets: a scrollable row of tabs above the content. */}
+        <nav className="flex gap-1 overflow-x-auto px-4 py-3 md:block md:space-y-1 md:py-0">
             {PROFILE_NAV_ITEMS.map((item) => (
                 <NavLink
                     key={item.to}
@@ -34,7 +35,7 @@ export const ProfileSidebar = ({ username, avatarUrl, counts }: IProfileSidebarP
                     end={item.to === ROUTES.PROFILE}
                     className={({ isActive }) =>
                         cn(
-                            "relative flex items-center justify-between px-4 py-3 rounded-lg text-body-2 font-medium transition-colors",
+                            "relative flex shrink-0 items-center justify-between gap-2 whitespace-nowrap px-4 py-3 rounded-lg text-body-2 font-medium transition-colors",
                             isActive
                                 ? "bg-brand-light text-brand-normal dark:bg-surface-elevated dark:text-brand-normal"
                                 : "text-text-primary hover:bg-surface-elevated dark:hover:bg-surface-elevated"

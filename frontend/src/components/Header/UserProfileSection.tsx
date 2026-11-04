@@ -2,9 +2,12 @@ import { useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@hooks/useAuth";
+import { LogIn } from "lucide-react";
 import { useGitHubLogin } from "@hooks/useGitHubLogin";
 import { Button } from "@components/Shadcn/Button";
 import GitHubIcon from "@assets/svgs/GitHubIcon";
+import { useLoginLabel } from "@hooks/useLoginLabel";
+import { getUserDisplayName } from "@/types/user";
 import { UserProfileMenu } from "@components/Header/UserProfileMenu";
 import { trackEvent } from "@utils/analytics";
 import { cn } from "@/lib/utils";
@@ -13,6 +16,7 @@ export const UserProfileSection = ({ inDrawer = false }: { inDrawer?: boolean })
     const location = useLocation();
     const { user, logout } = useAuth();
     const { startLogin, isLoginRedirecting } = useGitHubLogin();
+    const { provider, label: loginLabel } = useLoginLabel();
 
     const handleLogin = useCallback(() => {
         trackEvent({
@@ -47,11 +51,24 @@ export const UserProfileSection = ({ inDrawer = false }: { inDrawer?: boolean })
             {user ? (
                 <span
                     className={cn(
-                        "mr-3 text-sm font-semibold text-n-500 dark:text-n-0",
-                        inDrawer && "min-w-0 truncate"
+                        "mr-3 flex min-w-0 flex-col leading-tight",
+                        inDrawer ? "items-start" : "max-w-56 items-end"
                     )}
                 >
-                    {user.username}
+                    <span
+                        className="max-w-full truncate text-sm font-semibold text-n-500 dark:text-n-0"
+                        title={getUserDisplayName(user)}
+                    >
+                        {getUserDisplayName(user)}
+                    </span>
+                    {user.organisationName ? (
+                        <span
+                            className="max-w-full truncate text-xs text-n-300 dark:text-n-60"
+                            title={user.organisationName}
+                        >
+                            {user.organisationName}
+                        </span>
+                    ) : null}
                 </span>
             ) : null}
 
@@ -66,10 +83,14 @@ export const UserProfileSection = ({ inDrawer = false }: { inDrawer?: boolean })
                         "h-9 gap-3 rounded-full border border-n-40 bg-n-900 px-3 py-2 text-body-2 font-medium text-n-0 hover:bg-n-600 dark:text-neutral-900 dark:border-n-0 dark:bg-n-0 dark:hover:border-n-0 dark:hover:bg-n-30",
                         inDrawer && "w-full justify-center"
                     )}
-                    title="Login with GitHub"
+                    title={loginLabel}
                 >
-                    <GitHubIcon className="size-6 text-body-1 font-medium" />
-                    Login with GitHub
+                    {provider === "github" ? (
+                        <GitHubIcon className="size-6 text-body-1 font-medium" />
+                    ) : (
+                        <LogIn className="size-5" aria-hidden="true" />
+                    )}
+                    {loginLabel}
                 </Button>
             )}
         </div>

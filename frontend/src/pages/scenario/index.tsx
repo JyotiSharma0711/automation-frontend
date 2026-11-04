@@ -33,6 +33,7 @@ import { useGitHubLogin } from "@hooks/useGitHubLogin";
 import { IScenarioFormData, ISessionResponse, ISavedPrefAPI } from "@pages/scenario/types";
 import { openSessionInNewTab } from "@pages/scenario/helpers";
 import NewSessionForm from "@pages/scenario/NewSessionForm";
+import { LoginGate } from "@pages/scenario/LoginGate";
 import Spinner from "@components/Shadcn/Spinner";
 import { SCENARIO_GUIDE_STEPS, SCENARIO_TIP_BANNER_MESSAGE } from "@pages/scenario/constants";
 import { Button } from "@components/Shadcn/Button";
@@ -53,7 +54,7 @@ const Scenario = () => {
     const [isFormSubmitted, setIsFormSubmitted] = useState(false);
     const [domains, setDomains] = useState<IDomain[]>([]);
     const { sessionId: contextSessionId } = useSession();
-    const { user, token } = useAuth();
+    const { user, token, isAuthLoading } = useAuth();
     const { startLogin, isLoginRedirecting } = useGitHubLogin();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -88,6 +89,7 @@ const Scenario = () => {
 
             const response = await createSession({
                 ...data,
+                orgId: data.orgId || undefined,
                 userId: user?.username,
                 difficulty_cache: {
                     stopAfterFirstNack: true,
@@ -190,6 +192,7 @@ const Scenario = () => {
                             usecaseId: val.usecase_id,
                             npType: val.np_type,
                             env: val.env,
+                            orgId: val.org_id,
                         };
                     });
                     setSavedPreferences(mapped);
@@ -321,13 +324,19 @@ const Scenario = () => {
                                     <Spinner />
                                 </div>
                             ) : (
-                                <NewSessionForm
-                                    domains={domains}
-                                    savedPreferences={savedPreferences}
-                                    initialSavedConfigKey={initialSavedConfigKey}
-                                    isSubmitting={isFormSubmitted}
-                                    onSubmit={onSubmitHandler}
-                                />
+                                <LoginGate
+                                    isLoggedOut={!user && !isAuthLoading}
+                                    isLoginRedirecting={isLoginRedirecting}
+                                    onLogin={() => startLogin(ROUTES.SCENARIO)}
+                                >
+                                    <NewSessionForm
+                                        domains={domains}
+                                        savedPreferences={savedPreferences}
+                                        initialSavedConfigKey={initialSavedConfigKey}
+                                        isSubmitting={isFormSubmitted}
+                                        onSubmit={onSubmitHandler}
+                                    />
+                                </LoginGate>
                             )}
                         </Card>
                     </div>

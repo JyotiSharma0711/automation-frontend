@@ -29,9 +29,12 @@ export type ISavedConfigPanelProps = {
     selectedSavedConfig?: IScenarioFormData;
     savedUsecaseId: string;
     savedConfigUsecaseOptions: string[];
+    savedOrgId: string;
+    isSavedOrgLocked: boolean;
     isSubmitting: boolean;
     onConfigKeyChange: (key: string) => void;
     onUsecaseChange: (usecaseId: string) => void;
+    onOrgChange: (orgId: string) => void;
     onSubmit: () => void;
     onFillManually: () => void;
 };
@@ -67,6 +70,8 @@ export interface IScenarioFormData {
     subscriberUrl: string;
     npType: string;
     env: string;
+    /** NP Portal organisation the session is for; only set for ONDC logins. */
+    orgId?: string;
 }
 
 export interface ISessionResponse {
@@ -83,6 +88,7 @@ export type ISavedPrefAPI = {
     usecase_id: string;
     np_type: string;
     env: string;
+    org_id?: string;
 };
 
 export type ILocalSessionHistoryCardProps = {

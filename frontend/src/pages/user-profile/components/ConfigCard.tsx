@@ -7,6 +7,7 @@ import type { IConfigCardProps } from "@pages/user-profile/types";
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { ClipboardDocumentIcon } from "@heroicons/react/24/outline";
 import { useClipboard } from "@hooks/useClipboard";
+import { useOrganisationOptions } from "@pages/scenario/OrganisationField";
 
 export const ConfigCard = ({
     configKey,
@@ -18,6 +19,7 @@ export const ConfigCard = ({
     onLaunch,
 }: IConfigCardProps) => {
     const { copyToClipboard } = useClipboard();
+    const orgOptions = useOrganisationOptions();
     const displayTitle = CONFIG_DISPLAY_NAME_MAP[configKey] ?? configKey;
 
     return (
@@ -79,6 +81,13 @@ export const ConfigCard = ({
                     <ClipboardDocumentIcon className="size-4 text-brand-normal hover:text-brand-light" />
                 </Button>
             </div>
+
+            {config.orgId ? (
+                <p className="mt-1 truncate text-caption-1 text-text-secondary">
+                    <span className="font-semibold text-text-primary">Organisation:</span>{" "}
+                    {orgOptions.find((o) => o.value === config.orgId)?.label ?? config.orgId}
+                </p>
+            ) : null}
 
             <div className="flex flex-wrap gap-1.5 mt-3">
                 <TagBadge label={config.domain} variant="domain" />

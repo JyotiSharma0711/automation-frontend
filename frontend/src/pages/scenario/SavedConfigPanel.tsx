@@ -1,6 +1,7 @@
 import { Button } from "@components/Shadcn/Button";
 import { ComboBoxControl } from "@components/Shadcn/ComboBox";
 import { FieldGroup } from "@components/Shadcn/TextField/field";
+import { ORGANISATION_LABEL, useOrganisationOptions } from "@pages/scenario/OrganisationField";
 import { SessionFormActions } from "@pages/scenario/SessionFormActions";
 import { ISavedConfigPanelProps } from "@pages/scenario/types";
 
@@ -10,13 +11,18 @@ export const SavedConfigPanel = ({
     selectedSavedConfig,
     savedUsecaseId,
     savedConfigUsecaseOptions,
+    savedOrgId,
+    isSavedOrgLocked,
     isSubmitting,
     onConfigKeyChange,
     onUsecaseChange,
+    onOrgChange,
     onSubmit,
     onFillManually,
 }: ISavedConfigPanelProps) => {
     const hasSavedUsecase = !!selectedSavedConfig?.usecaseId;
+    const orgOptions = useOrganisationOptions();
+    const needsOrg = orgOptions.length > 0;
 
     return (
         <div className="space-y-4">
@@ -32,6 +38,25 @@ export const SavedConfigPanel = ({
 
                 {selectedSavedConfig && (
                     <div className="space-y-3">
+                        {needsOrg ? (
+                            <div className="space-y-1">
+                                <ComboBoxControl
+                                    label={isSavedOrgLocked ? "Organisation" : ORGANISATION_LABEL}
+                                    placeholder="Select your organisation"
+                                    value={savedOrgId}
+                                    onValueChange={onOrgChange}
+                                    options={orgOptions}
+                                    required={!isSavedOrgLocked}
+                                    disabled={isSavedOrgLocked}
+                                />
+                                {isSavedOrgLocked ? (
+                                    <p className="text-xs text-muted-foreground">
+                                        Set when this config was saved. To change it, edit the
+                                        config in your profile.
+                                    </p>
+                                ) : null}
+                            </div>
+                        ) : null}
                         <p className="text-xs text-muted-foreground">
                             <span className="font-medium text-foreground">URL:</span>{" "}
                             {selectedSavedConfig.subscriberUrl}
@@ -60,7 +85,9 @@ export const SavedConfigPanel = ({
             <SessionFormActions
                 isSubmitting={isSubmitting}
                 submitType="button"
-                submitDisabled={!selectedSavedConfigKey || !savedUsecaseId}
+                submitDisabled={
+                    !selectedSavedConfigKey || !savedUsecaseId || (needsOrg && !savedOrgId)
+                }
                 onSubmit={onSubmit}
                 className="flex items-center gap-3"
                 extraActions={

@@ -216,6 +216,7 @@ export const upsertSessionInDb = async (
   sessionId: string,
   data: {
     userId?: string;
+    orgId?: string;
     npType?: string;
     npId?: string;
     usecaseId?: string,
