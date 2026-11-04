@@ -1,5 +1,5 @@
 import { DOMAIN_FRIENDLY_NAMES } from "@constants/common";
-import { isDev, isDevGuideEnabled } from "@/types/environment";
+import { isDevGuideEnabled } from "@/types/environment";
 
 import type { BuildEntry } from "./types";
 import { isDomainEnabled } from "./utils";
@@ -131,9 +131,9 @@ export function groupBuildsByFamily(builds: BuildEntry[]): DomainFamilyGroup[] {
  * Services, and within it every domain except Credit — applied identically
  * wherever `groupBuildsByFamily`'s output feeds the UI (left sidebar nav
  * tree, the standalone domains page), so both stay in sync from this one
- * place. The development environment (`isDev`) shows every domain. */
+ * place. */
 export function applyDevGuideBetaDomainScope(families: DomainFamilyGroup[]): DomainFamilyGroup[] {
-    if (!isDevGuideEnabled || isDev) return families;
+    if (!isDevGuideEnabled) return families;
     return families
         .filter((family) => family.familyKey === "FIS")
         .map((family) => ({
