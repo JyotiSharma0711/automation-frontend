@@ -1,9 +1,7 @@
 // ONDC authorization header creation and verification, run entirely in the browser.
 // Signing string, signing and signature checks come from ONDC's official SDK
 // (ondc-crypto-sdk-nodejs), so the Playground signs exactly the way network participants do.
-// libsodium-wrappers (the SDK's own crypto engine) is used only for key handling, which the
-// SDK does not provide.
-import _sodium from "libsodium-wrappers";
+// Key handling, which the SDK does not provide, uses the browser's built-in Web Crypto (Ed25519).
 import {
     createAuthorizationHeader as sdkCreateAuthorizationHeader,
     signMessage,
@@ -11,12 +9,44 @@ import {
 } from "ondc-crypto-sdk-nodejs";
 import { createSigningString } from "ondc-crypto-sdk-nodejs/lib/utility";
 
-const sodiumReady = async () => {
-    await _sodium.ready;
-    return _sodium;
-};
+const BASE64_RE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
-const B64 = () => _sodium.base64_variants.ORIGINAL;
+function fromBase64(value: string): Uint8Array {
+    if (!BASE64_RE.test(value)) throw new Error("invalid base64");
+    return Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
+}
+
+function toBase64(bytes: Uint8Array): string {
+    return btoa(String.fromCharCode(...bytes));
+}
+
+function fromBase64Url(value: string): Uint8Array {
+    const b64 = value.replace(/-/g, "+").replace(/_/g, "/");
+    return fromBase64(b64.padEnd(Math.ceil(b64.length / 4) * 4, "="));
+}
+
+// PKCS#8 header for a raw 32-byte Ed25519 seed (RFC 8410).
+const ED25519_PKCS8_PREFIX = new Uint8Array([
+    0x30, 0x2e, 0x02, 0x01, 0x00, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x04, 0x22, 0x04, 0x20,
+]);
+
+/** The Ed25519 public key for a 32-byte seed. */
+async function publicKeyFromSeed(seed: Uint8Array): Promise<Uint8Array> {
+    const pkcs8 = new Uint8Array(ED25519_PKCS8_PREFIX.length + seed.length);
+    pkcs8.set(ED25519_PKCS8_PREFIX);
+    pkcs8.set(seed, ED25519_PKCS8_PREFIX.length);
+    const key = await crypto.subtle.importKey("pkcs8", pkcs8, { name: "Ed25519" }, true, ["sign"]);
+    const { x } = await crypto.subtle.exportKey("jwk", key);
+    return fromBase64Url(x ?? "");
+}
+
+/** seed + public key: the 64-byte private key form the ONDC SDK expects. */
+function concatKey(seed: Uint8Array, publicKey: Uint8Array): Uint8Array {
+    const key = new Uint8Array(64);
+    key.set(seed);
+    key.set(publicKey, 32);
+    return key;
+}
 
 export function toHex(bytes: Uint8Array): string {
     return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -47,7 +77,6 @@ export async function buildSigningString(
     created: number,
     expires: number
 ): Promise<{ signingString: string; digestBase64: string; digestHex: string }> {
-    const sodium = await sodiumReady();
     const { signingString } = await createSigningString({
         message: payload,
         created: String(created),
@@ -57,7 +86,7 @@ export async function buildSigningString(
     return {
         signingString,
         digestBase64,
-        digestHex: toHex(sodium.from_base64(digestBase64, B64())),
+        digestHex: toHex(fromBase64(digestBase64)),
     };
 }
 
@@ -68,38 +97,39 @@ export async function buildSigningString(
 export async function normalizePrivateKey(
     privateKeyBase64: string
 ): Promise<{ privateKey: string; publicKey: string }> {
-    const sodium = await sodiumReady();
     let bytes: Uint8Array;
     try {
-        bytes = sodium.from_base64(privateKeyBase64.trim(), B64());
+        bytes = fromBase64(privateKeyBase64.trim());
     } catch {
         throw new Error("Private key is not valid Base64.");
     }
     if (bytes.length !== 32 && bytes.length !== 64) {
         throw new Error(`Private key must be 32 or 64 bytes; got ${bytes.length} bytes.`);
     }
-    const keyPair = sodium.crypto_sign_seed_keypair(bytes.slice(0, 32));
-    if (
-        bytes.length === 64 &&
-        sodium.to_base64(bytes.slice(32), B64()) !== sodium.to_base64(keyPair.publicKey, B64())
-    ) {
+    const seed = bytes.slice(0, 32);
+    const publicKey = await publicKeyFromSeed(seed);
+    if (bytes.length === 64 && toBase64(bytes.slice(32)) !== toBase64(publicKey)) {
         throw new Error(
             "64-byte private key is inconsistent: its last 32 bytes are not the matching public key."
         );
     }
     return {
-        privateKey: sodium.to_base64(keyPair.privateKey, B64()),
-        publicKey: sodium.to_base64(keyPair.publicKey, B64()),
+        privateKey: toBase64(concatKey(seed, publicKey)),
+        publicKey: toBase64(publicKey),
     };
 }
 
 /** A fresh Ed25519 key pair, private key in the 64-byte form used by ONDC. */
 export async function generateDemoKeyPair(): Promise<{ privateKey: string; publicKey: string }> {
-    const sodium = await sodiumReady();
-    const keyPair = sodium.crypto_sign_keypair();
+    const keyPair = (await crypto.subtle.generateKey({ name: "Ed25519" }, true, [
+        "sign",
+        "verify",
+    ])) as CryptoKeyPair;
+    const { d, x } = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+    const publicKey = fromBase64Url(x ?? "");
     return {
-        privateKey: sodium.to_base64(keyPair.privateKey, B64()),
-        publicKey: sodium.to_base64(keyPair.publicKey, B64()),
+        privateKey: toBase64(concatKey(fromBase64Url(d ?? ""), publicKey)),
+        publicKey: toBase64(publicKey),
     };
 }
 
