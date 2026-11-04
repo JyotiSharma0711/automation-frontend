@@ -145,7 +145,6 @@ jobs:
             VITE_DB_SERVICE_API_KEY=${{ vars.VITE_DB_SERVICE_API_KEY }}
             VITE_DEVELOPER_GUIDE_BACKEND_URL=${{ vars.VITE_DEVELOPER_GUIDE_BACKEND_URL }}
             VITE_ENABLE_DEV_GUIDE=${{ vars.VITE_ENABLE_DEV_GUIDE }}
-            VITE_DEV_GUIDE_ALL_DOMAINS=${{ vars.VITE_DEV_GUIDE_ALL_DOMAINS }}
             VITE_ENVIRONMENT=${{ vars.VITE_ENVIRONMENT }}
             VITE_ONDC_PORTAL_URL=${{ vars.VITE_ONDC_PORTAL_URL }}
           cache-from: type=gha,scope=frontend
