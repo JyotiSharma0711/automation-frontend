@@ -12,6 +12,7 @@ interface ImportMetaEnv {
     readonly VITE_CHATBOT_MCP_BASE_URL?: string;
     readonly VITE_FRONTENT_URL?: string;
     readonly VITE_ENABLE_DEV_GUIDE?: string;
+    readonly VITE_ONDC_PORTAL_URL?: string;
 }
 
 interface ImportMeta {

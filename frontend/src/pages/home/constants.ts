@@ -66,7 +66,7 @@ const learnPathCard: IPathCard = {
 const buildPathCard: IPathCard = {
     label: "// 02 · BUILD",
     title: "Ready to integrate?",
-    subtitle: "Step-by-step from setup to staging.",
+    subtitle: "Step-by-step from setup to pre-production.",
     description:
         "Configure your environment, pick your domain, validate every payload, and simulate full transaction flows before you ship.",
     links: [

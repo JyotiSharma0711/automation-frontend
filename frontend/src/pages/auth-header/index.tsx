@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { FaBook, FaCode } from "react-icons/fa";
+import { FaBook, FaCode, FaPlay } from "react-icons/fa";
 import Header from "@pages/auth-header/Header";
 import Tabs from "@pages/auth-header/Tabs";
 import Tab from "@pages/auth-header/Tab";
@@ -12,6 +12,7 @@ const AuthHeader = () => {
         () => [
             { id: "overview", label: "Overview", icon: <FaBook /> },
             { id: "snippets", label: "Code Snippets", icon: <FaCode /> },
+            { id: "header-playground", label: "Header Playground", icon: <FaPlay /> },
         ],
         []
     );

@@ -210,7 +210,12 @@ export function buildNavTree(
             searchText: `${familyTitle} ${family.familyKey} ${family.domains
                 .map((d) => `${getDomainDisplayLabel(d.key)} ${d.key}`)
                 .join(" ")}`,
-            children: family.domains.map(buildDomainGroupNode),
+            // A domain labelled the same as its family (e.g. nic2004:60232 → "Logistics" under
+            // "Logistics") would repeat the name, so its use cases sit directly under the family.
+            children: family.domains.flatMap((dom) => {
+                const node = buildDomainGroupNode(dom);
+                return node.type === "group" && node.label === familyTitle ? node.children : [node];
+            }),
         };
     });
 
