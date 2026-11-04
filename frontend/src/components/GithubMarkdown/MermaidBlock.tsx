@@ -151,7 +151,7 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                         noteBorderColor: c.border,
                         noteTextColor: c.foreground,
                     },
-                    flowchart: { htmlLabels: false, curve: "basis" },
+                    flowchart: { htmlLabels: true, curve: "basis" },
                 });
                 const { svg: rendered } = await mermaid.render(
                     `${containerId}-${Date.now()}`,
