@@ -61,13 +61,10 @@ export function isUseCaseEnabled(domain: BuildEntry, _usecaseLabel: string): boo
     return isDomainEnabled(domain);
 }
 
-const PRIORITY_DOC_ORDER = [
-    "about ondc",
-    "protocol",
-    "registry gateway",
-    "network observability",
-    "faqs",
-];
+const PRIORITY_DOC_ORDER = ["about ondc", "protocol", "registry gateway", "network observability"];
+
+/** Docs always listed after all others, in this order. */
+const LAST_DOC_ORDER = ["faqs"];
 
 function normalizeDocKey(value: string): string {
     return value
@@ -76,26 +73,28 @@ function normalizeDocKey(value: string): string {
         .trim();
 }
 
-function getPriorityDocIndex(doc: DocMeta): number {
+function getDocOrderIndex(doc: DocMeta, order: string[]): number {
     const labelKey = normalizeDocKey(doc.label);
     const slugKey = normalizeDocKey(doc.slug);
-    return PRIORITY_DOC_ORDER.findIndex(
+    return order.findIndex(
         (key) =>
             labelKey === key || labelKey.includes(key) || slugKey === key || slugKey.includes(key)
     );
 }
 
+/** Sort rank: priority docs first, then all other docs, then LAST_DOC_ORDER docs. */
+function getDocRank(doc: DocMeta): number {
+    const priority = getDocOrderIndex(doc, PRIORITY_DOC_ORDER);
+    if (priority !== -1) return priority;
+    const last = getDocOrderIndex(doc, LAST_DOC_ORDER);
+    if (last !== -1) return PRIORITY_DOC_ORDER.length + 1 + last;
+    return PRIORITY_DOC_ORDER.length;
+}
+
 export function sortDocsByPreferredSequence(docs: DocMeta[]): DocMeta[] {
     return [...docs].sort((a, b) => {
-        const aPriority = getPriorityDocIndex(a);
-        const bPriority = getPriorityDocIndex(b);
-
-        if (aPriority !== -1 || bPriority !== -1) {
-            if (aPriority === -1) return 1;
-            if (bPriority === -1) return -1;
-            return aPriority - bPriority;
-        }
-
+        const rankDiff = getDocRank(a) - getDocRank(b);
+        if (rankDiff !== 0) return rankDiff;
         return a.label.localeCompare(b.label);
     });
 }
