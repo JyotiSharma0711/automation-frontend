@@ -113,6 +113,24 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
             setLoading(true);
             setError(null);
             try {
+                // Mermaid measures label text (via a hidden DOM pass) to size each
+                // node/cluster box before painting the real SVG. If a font weight
+                // used in the label (e.g. the <b> in a two-tier label) hasn't
+                // finished loading yet, that measurement uses fallback-font metrics
+                // — narrower than Inter's real glyphs — so the box gets sized too
+                // small and the real text clips once the web font paints in.
+                // `fonts.ready` alone isn't enough: it only waits for weights the
+                // already-visible page happens to need, and mermaid's measurement
+                // pass runs in a hidden/detached element that may not register as
+                // "needing" a weight yet. Explicitly loading the exact
+                // weight/size pairs the labels use removes that gap.
+                if (typeof document !== "undefined" && document.fonts) {
+                    await Promise.all([
+                        document.fonts.load("700 13px Inter"),
+                        document.fonts.load("400 13px Inter"),
+                        document.fonts.ready,
+                    ]).catch(() => undefined);
+                }
                 const mermaid = (await import("mermaid")).default;
                 const c = isDark ? PALETTE.dark : PALETTE.light;
                 mermaid.initialize({
