@@ -113,6 +113,24 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
             setLoading(true);
             setError(null);
             try {
+                // Mermaid measures label text (via a hidden DOM pass) to size each
+                // node/cluster box before painting the real SVG. If a font weight
+                // used in the label (e.g. the <b> in a two-tier label) hasn't
+                // finished loading yet, that measurement uses fallback-font metrics
+                // — narrower than Inter's real glyphs — so the box gets sized too
+                // small and the real text clips once the web font paints in.
+                // `fonts.ready` alone isn't enough: it only waits for weights the
+                // already-visible page happens to need, and mermaid's measurement
+                // pass runs in a hidden/detached element that may not register as
+                // "needing" a weight yet. Explicitly loading the exact
+                // weight/size pairs the labels use removes that gap.
+                if (typeof document !== "undefined" && document.fonts) {
+                    await Promise.all([
+                        document.fonts.load("700 13px Inter"),
+                        document.fonts.load("400 13px Inter"),
+                        document.fonts.ready,
+                    ]).catch(() => undefined);
+                }
                 const mermaid = (await import("mermaid")).default;
                 const c = isDark ? PALETTE.dark : PALETTE.light;
                 mermaid.initialize({
@@ -121,6 +139,7 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                     theme: "base",
                     themeVariables: {
                         fontFamily: "Inter, sans-serif",
+                        fontSize: "13px",
                         background: c.background,
                         primaryColor: c.card,
                         primaryTextColor: c.foreground,
@@ -151,7 +170,14 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                         noteBorderColor: c.border,
                         noteTextColor: c.foreground,
                     },
-                    flowchart: { htmlLabels: true, curve: "basis" },
+                    flowchart: {
+                        htmlLabels: true,
+                        curve: "basis",
+                        diagramPadding: 4,
+                        nodeSpacing: 24,
+                        rankSpacing: 36,
+                        padding: 8,
+                    },
                 });
                 const { svg: rendered } = await mermaid.render(
                     `${containerId}-${Date.now()}`,
@@ -189,7 +215,7 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
 
     return (
         <div
-            className="my-4 flex justify-center overflow-x-auto rounded-lg border border-border bg-background p-4 [&_svg]:max-w-full"
+            className="my-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-background p-4 [&_svg]:mx-auto [&_svg]:block [&_svg]:min-w-[560px]"
             dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
         />
     );
