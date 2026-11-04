@@ -121,6 +121,7 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                     theme: "base",
                     themeVariables: {
                         fontFamily: "Inter, sans-serif",
+                        fontSize: "13px",
                         background: c.background,
                         primaryColor: c.card,
                         primaryTextColor: c.foreground,
@@ -151,7 +152,14 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                         noteBorderColor: c.border,
                         noteTextColor: c.foreground,
                     },
-                    flowchart: { htmlLabels: true, curve: "basis" },
+                    flowchart: {
+                        htmlLabels: true,
+                        curve: "basis",
+                        diagramPadding: 4,
+                        nodeSpacing: 24,
+                        rankSpacing: 36,
+                        padding: 8,
+                    },
                 });
                 const { svg: rendered } = await mermaid.render(
                     `${containerId}-${Date.now()}`,
@@ -189,7 +197,7 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
 
     return (
         <div
-            className="my-4 flex justify-center overflow-x-auto rounded-lg border border-border bg-background p-4 [&_svg]:max-w-full"
+            className="my-4 min-w-0 max-w-full overflow-x-auto rounded-lg border border-border bg-background p-4 [&_svg]:mx-auto [&_svg]:block [&_svg]:min-w-[560px]"
             dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
         />
     );
