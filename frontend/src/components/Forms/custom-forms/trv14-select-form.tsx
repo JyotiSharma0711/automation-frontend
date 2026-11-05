@@ -62,6 +62,12 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
     const [errorWhilePaste, setErrorWhilePaste] = useState("");
     const [providerOptions, setProviderOptions] = useState<string[]>([]);
     const [itemOptions, setItemOptions] = useState<IExtractedItem[]>([]);
+
+    // ADDED: Store the complete original items array for each provider.
+    const [payloadItemsByProvider, setPayloadItemsByProvider] = useState<Record<string, unknown[]>>(
+        {}
+    );
+
     const [fulfillmentOptions, setFulfillmentOptions] = useState<ICatalogFulfillment[]>([]);
     const [addOnPickerKeys, setAddOnPickerKeys] = useState<Record<number, number>>({});
 
@@ -201,11 +207,17 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
         const output: Record<string, unknown> = {
             provider: data.provider,
             city_code: data.city_code,
+
+            // EXISTING FIELD: unchanged.
             items: data.items.map((item) => ({
                 ...item,
                 count: Number(item.count) || 1,
                 addOnsQuantity: Number(item.addOnsQuantity) || 1,
             })),
+
+            // ADDED: Complete original items array from pasted payload.
+            catalog_items: payloadItemsByProvider[data.provider] || [],
+
             fulfillments: selectedFulfillment
                 ? [
                       {
@@ -219,6 +231,7 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
                 : [],
             ...(timeData ? { time: timeData } : {}),
         };
+
         await submitEvent({
             jsonPath: {},
             formData: output as unknown as Record<string, unknown>,
@@ -236,6 +249,9 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
             const allFulfillments: ICatalogFulfillment[] = [];
             const allProviders: string[] = [];
 
+            // ADDED: Temporary storage for complete provider items arrays.
+            const itemsByProvider: Record<string, unknown[]> = {};
+
             providers.forEach((provider) => {
                 if (provider.id && !allProviders.includes(provider.id)) {
                     allProviders.push(provider.id);
@@ -244,6 +260,9 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
                     allFulfillments.push(...provider.fulfillments);
                 }
                 if (!provider.items) return;
+
+                // ADDED: Preserve the complete original provider.items array.
+                itemsByProvider[provider.id] = provider.items;
 
                 provider.items.forEach((item) => {
                     if (item.parent_item_id) {
@@ -259,6 +278,10 @@ export default function TRV14SelectForm({ submitEvent, flowId }: ITRVSelectFormP
             });
 
             setProviderOptions(allProviders);
+
+            // ADDED: Save original arrays by provider ID.
+            setPayloadItemsByProvider(itemsByProvider);
+
             if (allProviders.length > 0) {
                 setValue("provider", allProviders[0]);
             }
