@@ -8,8 +8,11 @@ export interface IFormItem {
 }
 
 export interface IFormData {
+    city_code?: string;
     provider: string;
+    provider_id?: string;
     fulfillment: string;
+    fulfillment_id?: string;
     items: IFormItem[];
 }
 
@@ -32,16 +35,37 @@ export interface ICatalogItemRaw {
 
 export interface ICatalogFulfillment {
     id: string;
+    type?: string;
+    [key: string]: unknown;
 }
 
 export interface ICatalogProvider {
     id: string;
+    descriptor?: { name?: string };
     items?: ICatalogItemRaw[];
     fulfillments?: ICatalogFulfillment[];
+    [key: string]: unknown;
 }
 
 export interface IOnSearchPayload {
-    message?: { catalog?: { providers?: ICatalogProvider[] } };
+    context?: {
+        location?: {
+            city?: {
+                code?: string;
+            };
+        };
+        city?: string;
+        [key: string]: unknown;
+    };
+    message?: {
+        catalog?: {
+            providers?: ICatalogProvider[];
+            fulfillments?: ICatalogFulfillment[];
+            [key: string]: unknown;
+        };
+        [key: string]: unknown;
+    };
+    [key: string]: unknown;
 }
 
 export interface IAirlineSelectProps {
@@ -50,6 +74,7 @@ export interface IAirlineSelectProps {
 }
 
 export const DEFAULT_FORM_DATA: IFormData = {
+    city_code: "std:080",
     provider: "",
     fulfillment: "",
     items: [{ itemId: "", count: 1, addOnId: "", addOnCount: 1 }],
