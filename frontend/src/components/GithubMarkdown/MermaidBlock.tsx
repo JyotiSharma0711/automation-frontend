@@ -172,11 +172,12 @@ const MermaidBlock: FC<MermaidBlockProps> = ({ source }) => {
                     },
                     flowchart: {
                         htmlLabels: true,
-                        curve: "basis",
+                        curve: "linear",
                         diagramPadding: 4,
                         nodeSpacing: 24,
                         rankSpacing: 36,
                         padding: 8,
+                        subGraphTitleMargin: { top: 8, bottom: 28 },
                     },
                 });
                 const { svg: rendered } = await mermaid.render(
