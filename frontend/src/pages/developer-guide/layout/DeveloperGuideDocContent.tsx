@@ -1,13 +1,21 @@
-import { FC, useCallback, useMemo } from "react";
+import {
+    FC,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type CSSProperties,
+} from "react";
 import { ChevronRightIcon } from "@heroicons/react/24/outline";
 import { useParams } from "react-router-dom";
 import { useGetGithubDocContentQuery } from "@store/api";
 import GithubMarkdown from "@components/GithubMarkdown";
-import TableOfContents from "@components/TableOfContents";
 import { Button } from "@components/Shadcn/Button";
 import { cn } from "@/lib/utils";
 import { COMMENTS_PANEL_TOGGLE_CLASS } from "../shared/styles";
 import {
+    stripMarkdownOnThisPage,
     stripMarkdownTableOfContents,
     stripRedundantMarkdownHorizontalRules,
 } from "@utils/markdownToc";
@@ -21,6 +29,11 @@ import CommentsPanel from "../flowActionDetails/CommentsPanel";
 import { useDocsSectionSelection } from "../DocsViewer/useDocsSectionSelection";
 import GuideContentSkeleton from "../shared/components/GuideContentSkeleton";
 import { useInlineCommentHeading } from "../shared/hooks/useInlineCommentHeading";
+import {
+    PinnedPageIndex,
+    PageIndexList,
+    buildSectionIndexGroups,
+} from "../shared/components/PinnedPageIndex";
 
 const DeveloperGuideDocContent: FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -46,6 +59,39 @@ const DeveloperGuideDocContent: FC = () => {
         tocOffset,
     } = useDocsSectionSelection({ docSlugs, docs: docsRecord });
 
+    const indexGroups = useMemo(
+        () => (slug && content ? buildSectionIndexGroups(docsRecord, docSlugs) : []),
+        [docsRecord, docSlugs, slug, content]
+    );
+
+    const contentRef = useRef<HTMLDivElement>(null);
+    const [scrolledActiveId, setScrolledActiveId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!content) return;
+        const headings = Array.from(document.querySelectorAll<HTMLElement>("h2[id], h3[id]"));
+        if (headings.length === 0) return;
+
+        const onScroll = () => {
+            const scrollPos = window.scrollY + tocOffset + 40;
+            let currentId: string | null = null;
+            for (const h of headings) {
+                if (h.offsetTop <= scrollPos) {
+                    currentId = h.id;
+                } else {
+                    break;
+                }
+            }
+            if (currentId) setScrolledActiveId(currentId);
+        };
+
+        window.addEventListener("scroll", onScroll, { passive: true });
+        onScroll();
+        return () => window.removeEventListener("scroll", onScroll);
+    }, [content, tocOffset]);
+
+    const activeSectionId = selectedSectionId ?? scrolledActiveId ?? "";
+
     const resolveSectionLabel = useCallback(
         (sectionId: string) => toc.find((entry) => entry.id === sectionId)?.text,
         [toc]
@@ -64,7 +110,9 @@ const DeveloperGuideDocContent: FC = () => {
     // GitHub md often uses `# Title` / `## Section` + `---` — strip heading-adjacent
     // rules so they don't leave empty vertical gaps under titles.
     const displayContent = useMemo(() => {
-        const withoutToc = stripsEmbeddedToc ? stripMarkdownTableOfContents(content) : content;
+        const withoutToc = stripsEmbeddedToc
+            ? stripMarkdownOnThisPage(stripMarkdownTableOfContents(content))
+            : content;
         return stripRedundantMarkdownHorizontalRules(withoutToc);
     }, [content, stripsEmbeddedToc]);
 
@@ -85,20 +133,7 @@ const DeveloperGuideDocContent: FC = () => {
     return (
         <div className="p-4">
             <div className="flex gap-6 items-stretch min-h-[60vh]">
-                {showsInPageToc && (
-                    <TableOfContents
-                        content={content}
-                        className="hidden xl:block w-56 shrink-0 self-start sticky overflow-y-auto"
-                        style={{
-                            top: tocOffset,
-                            maxHeight: `calc(100vh - ${tocOffset}px)`,
-                        }}
-                        offset={tocOffset}
-                        onSectionClick={selectSection}
-                        activeSectionId={selectedSectionId}
-                    />
-                )}
-                <div className="flex-1 min-w-0 relative">
+                <div ref={contentRef} className="flex-1 min-w-0 relative">
                     {commentScope && (
                         <Button
                             type="button"
@@ -164,6 +199,23 @@ const DeveloperGuideDocContent: FC = () => {
                         />
                     </div>
                 </div>
+
+                {showsInPageToc && indexGroups.length > 0 && (
+                    <div className="shrink-0 self-start">
+                        <PinnedPageIndex
+                            topOffset={tocOffset}
+                            boundaryRef={contentRef}
+                            className="hidden lg:block w-64"
+                        >
+                            <PageIndexList
+                                groups={indexGroups}
+                                activeId={activeSectionId}
+                                onItemClick={selectSection}
+                            />
+                        </PinnedPageIndex>
+                    </div>
+                )}
+
                 {commentScope && (
                     <div
                         className={cn(
@@ -172,7 +224,12 @@ const DeveloperGuideDocContent: FC = () => {
                                 ? "max-w-80 opacity-100"
                                 : "max-w-0 opacity-0 pointer-events-none"
                         )}
-                        style={{ top: tocOffset, height: `calc(100vh - ${tocOffset}px)` }}
+                        style={
+                            {
+                                top: tocOffset,
+                                height: `calc(100vh - ${tocOffset}px)`,
+                            } as unknown as CSSProperties
+                        }
                     >
                         <div className="w-80 h-full">
                             <CommentsPanel
