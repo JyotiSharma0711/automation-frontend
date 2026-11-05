@@ -14,6 +14,7 @@ import {
     ICatalogItem,
     ICatalogAddOn,
     ICatalogItemRaw,
+    ICatalogFulfillment,
     IOnSearchPayload,
     IAirlineSelectProps,
     DEFAULT_FORM_DATA,
@@ -26,6 +27,10 @@ export default function TRV12AirlineSelectForm({
     const [isPayloadEditorActive, setIsPayloadEditorActive] = useState(false);
     const [errorWhilePaste, setErrorWhilePaste] = useState("");
     const [availableItems, setAvailableItems] = useState<ICatalogItem[]>([]);
+    const [availableProviders, setAvailableProviders] = useState<{ id: string; name: string }[]>(
+        []
+    );
+    const [availableFulfillments, setAvailableFulfillments] = useState<ICatalogFulfillment[]>([]);
 
     const { control, handleSubmit, setValue, reset, watch } = useForm<IFormData>({
         defaultValues,
@@ -46,11 +51,12 @@ export default function TRV12AirlineSelectForm({
     const handlePaste = (payload: unknown) => {
         try {
             const parsed = payload as IOnSearchPayload;
-            if (!parsed?.message?.catalog?.providers) {
+            if (!parsed?.message?.catalog?.providers || !parsed.message.catalog.providers.length) {
                 throw new Error("Invalid Schema");
             }
 
-            const provider = parsed.message.catalog.providers[0];
+            const providers = parsed.message.catalog.providers;
+            const provider = providers[0];
 
             const catalogItems: ICatalogItem[] = (provider.items || []).map(
                 (item: ICatalogItemRaw) => ({
@@ -63,16 +69,43 @@ export default function TRV12AirlineSelectForm({
                 })
             );
 
+            const extractedProviders = providers.map((p) => ({
+                id: p.id,
+                name: p.descriptor?.name ? `${p.descriptor.name} (${p.id})` : p.id,
+            }));
+            setAvailableProviders(extractedProviders);
+
+            const fulfillments: ICatalogFulfillment[] = [];
+            if (provider.fulfillments) {
+                fulfillments.push(...provider.fulfillments);
+            }
+            if (parsed.message?.catalog?.fulfillments) {
+                parsed.message.catalog.fulfillments.forEach((f) => {
+                    if (!fulfillments.some((existing) => existing.id === f.id)) {
+                        fulfillments.push(f);
+                    }
+                });
+            }
+            setAvailableFulfillments(fulfillments);
+
             setAvailableItems(catalogItems);
             setErrorWhilePaste("");
 
-            setValue("provider", provider.id);
-            setValue("fulfillment", provider.fulfillments?.[0]?.id || "");
+            const cityCode =
+                parsed.context?.location?.city?.code || parsed.context?.city || "std:080";
+            const initialProviderId = provider.id || "";
+            const initialFulfillmentId =
+                fulfillments[0]?.id || provider.fulfillments?.[0]?.id || "";
+
+            setValue("city_code", cityCode);
+            setValue("provider", initialProviderId);
+            setValue("fulfillment", initialFulfillmentId);
 
             if (catalogItems.length > 0) {
                 reset({
-                    provider: provider.id,
-                    fulfillment: provider.fulfillments?.[0]?.id || "",
+                    city_code: cityCode,
+                    provider: initialProviderId,
+                    fulfillment: initialFulfillmentId,
                     items: [
                         {
                             itemId: catalogItems[0].id,
@@ -111,9 +144,17 @@ export default function TRV12AirlineSelectForm({
                 : [],
         }));
 
+        const providerId = data.provider || data.provider_id || "";
+        const fulfillmentId = data.fulfillment || data.fulfillment_id || "";
+        const cityCode = data.city_code || "std:080";
+
+        const selectedFulfillment =
+            availableFulfillments.find((f) => f.id === fulfillmentId) ||
+            (fulfillmentId ? { id: fulfillmentId } : undefined);
+
         const finalPayload = {
-            provider: data.provider,
-            fulfillment: data.fulfillment,
+            provider: providerId,
+            fulfillment: fulfillmentId,
             items: finalItems,
         };
 
@@ -121,6 +162,17 @@ export default function TRV12AirlineSelectForm({
             jsonPath: {},
             formData: {
                 data: JSON.stringify(finalPayload),
+                provider: providerId,
+                provider_id: providerId,
+                fulfillment_id: fulfillmentId,
+                city_code: cityCode,
+                fulfillment: selectedFulfillment,
+                fulfillments:
+                    availableFulfillments.length > 0
+                        ? availableFulfillments
+                        : selectedFulfillment
+                          ? [selectedFulfillment]
+                          : [],
             },
         });
     };
@@ -165,6 +217,58 @@ export default function TRV12AirlineSelectForm({
                     onClick={() => setIsPayloadEditorActive(true)}
                     className="mb-0"
                 />
+
+                <div className="space-y-4 rounded-lg border border-border p-4">
+                    <TextField
+                        control={control}
+                        name="city_code"
+                        label="City Code"
+                        required
+                        placeholder="std:080"
+                    />
+
+                    {availableProviders.length > 0 ? (
+                        <ComboBox
+                            control={control}
+                            name="provider"
+                            label="Provider ID"
+                            required
+                            options={availableProviders.map((p) => ({
+                                label: p.name,
+                                value: p.id,
+                            }))}
+                        />
+                    ) : (
+                        <TextField
+                            control={control}
+                            name="provider"
+                            label="Provider ID"
+                            placeholder="Paste on_search payload or enter provider ID"
+                            required
+                        />
+                    )}
+
+                    {availableFulfillments.length > 0 ? (
+                        <ComboBox
+                            control={control}
+                            name="fulfillment"
+                            label="Fulfillment ID"
+                            required
+                            options={availableFulfillments.map((f) => ({
+                                label: f.type ? `${f.id} (${f.type})` : f.id,
+                                value: f.id,
+                            }))}
+                        />
+                    ) : (
+                        <TextField
+                            control={control}
+                            name="fulfillment"
+                            label="Fulfillment ID"
+                            placeholder="Paste on_search payload or enter fulfillment ID"
+                            required
+                        />
+                    )}
+                </div>
 
                 {fields.map((field, index) => {
                     const selectedItemId = watchedItems?.[index]?.itemId || "";
