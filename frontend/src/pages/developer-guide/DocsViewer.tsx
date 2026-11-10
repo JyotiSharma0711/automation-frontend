@@ -19,7 +19,11 @@ import { buildApiCallLinkMap, normalizeApiToken } from "./DocsViewer/apiCallLink
 import type { FlowEntry } from "./types";
 import { buildDocumentCommentScope } from "./DocsViewer/utils";
 import { useInlineCommentHeading } from "./shared/hooks/useInlineCommentHeading";
-import { isAdditionalResourcesSlug, isChangelogSlug } from "./content/resolveUseCaseDocs";
+import {
+    isAdditionalResourcesSlug,
+    isChangelogSlug,
+    isSequenceDiagramDocSlug,
+} from "./content/resolveUseCaseDocs";
 
 interface DocsViewerProps {
     docs: Record<string, string>;
@@ -47,7 +51,8 @@ const DocsViewer: FC<DocsViewerProps> = ({ docs, useCaseId, domain, version, flo
                 normalized !== "refrences" &&
                 normalized !== "figma" &&
                 !isAdditionalResourcesSlug(key) &&
-                !isChangelogSlug(key)
+                !isChangelogSlug(key) &&
+                !isSequenceDiagramDocSlug(key)
             );
         });
 

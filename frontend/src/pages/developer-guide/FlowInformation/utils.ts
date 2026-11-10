@@ -1,10 +1,5 @@
-import type {
-    FlowStep,
-    StepDisplayItem,
-    FlowDetailBlock,
-    FlowEntry,
-} from "@pages/developer-guide/types";
-import { getActionId } from "@pages/developer-guide/utils";
+import type { FlowStep, StepDisplayItem } from "@pages/developer-guide/types";
+import { getActionId, labelToSlug } from "@pages/developer-guide/utils";
 import type {
     FlowExample,
     FlowInformationSection,
@@ -91,36 +86,57 @@ export function resolveDefaultSection(): FlowInformationSection {
     return "preview";
 }
 
-function collectMermaidBlocks(details: FlowDetailBlock[] | undefined): string[] {
-    if (!details?.length) return [];
-    return details
-        .map((d) => d.mermaid?.trim())
-        .filter((m): m is string => !!m && m.includes("sequenceDiagram"));
+const SEQUENCE_DIAGRAM_DOC_SUFFIX = "-sequence-diagrams";
+
+/** `x-docs` slug for a flow's per-step sequence-diagram doc (see `config/docs/<slug>.md`
+ * in automation-specifications). One doc per flow, scoped by its own flowId. */
+export function sequenceDiagramDocSlug(flowId: string): string {
+    return `${labelToSlug(flowId)}${SEQUENCE_DIAGRAM_DOC_SUFFIX}`;
 }
 
-function normalizeMermaid(source: string): string {
-    const trimmed = source.trim();
-    return trimmed.startsWith("sequenceDiagram") ? trimmed : `sequenceDiagram\n${trimmed}`;
+export function isSequenceDiagramDocSlug(slug: string): boolean {
+    return slug.toLowerCase().endsWith(SEQUENCE_DIAGRAM_DOC_SUFFIX);
 }
 
-function joinMermaidBlocks(blocks: string[]): string | null {
-    if (blocks.length === 0) return null;
-    // Mermaid allows only one diagram root — keep the first authored block.
-    return normalizeMermaid(blocks[0]);
+/** Pulls the Mermaid body out of the first ```mermaid fence under a `## <headingId>`
+ * heading in a flow's sequence-diagram doc (section ends at the next heading or EOF). */
+function extractMermaidForHeading(markdown: string, headingId: string): string | null {
+    const lines = markdown.split("\n");
+    const headingIdx = lines.findIndex((l) => l.trim() === `## ${headingId}`);
+    if (headingIdx === -1) return null;
+
+    let sectionEnd = lines.length;
+    for (let i = headingIdx + 1; i < lines.length; i++) {
+        if (/^#{1,6}\s/.test(lines[i])) {
+            sectionEnd = i;
+            break;
+        }
+    }
+
+    const section = lines.slice(headingIdx + 1, sectionEnd);
+    const fenceStart = section.findIndex((l) => l.trim().startsWith("```mermaid"));
+    if (fenceStart === -1) return null;
+    const fenceEnd = section.findIndex((l, i) => i > fenceStart && l.trim() === "```");
+    if (fenceEnd === -1) return null;
+
+    const body = section
+        .slice(fenceStart + 1, fenceEnd)
+        .join("\n")
+        .trim();
+    return body || null;
 }
 
 /**
- * Resolve authored Mermaid for the Details "Sequence Diagram" tab.
- * Only returns diagrams supplied by the spec (`details[].mermaid`); no client-side fallback.
+ * Resolve authored Mermaid for the Details "Sequence Diagram" tab from the flow's
+ * `x-docs` sequence-diagram doc (see `sequenceDiagramDocSlug`). No client-side fallback.
  */
 export function resolveSequenceMermaid(
-    flow: FlowEntry | undefined,
-    step: FlowStep | undefined
+    apiDocs: Record<string, string> | undefined,
+    flowId: string | undefined,
+    actionId: string | undefined
 ): string | null {
-    if (!flow) return null;
-
-    const fromStep = joinMermaidBlocks(collectMermaidBlocks(step?.details));
-    if (fromStep) return fromStep;
-
-    return joinMermaidBlocks(collectMermaidBlocks(flow.config?.details));
+    if (!apiDocs || !flowId || !actionId) return null;
+    const doc = apiDocs[sequenceDiagramDocSlug(flowId)];
+    if (!doc) return null;
+    return extractMermaidForHeading(doc, actionId);
 }
