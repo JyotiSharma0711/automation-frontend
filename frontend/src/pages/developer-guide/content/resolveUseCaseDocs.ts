@@ -4,6 +4,7 @@ import {
     stripRedundantMarkdownHorizontalRules,
 } from "@utils/markdownToc";
 import { labelToSlug } from "../utils";
+import { isSequenceDiagramDocSlug } from "../FlowInformation/utils";
 
 function prepareDocContent(markdown: string): string {
     return stripRedundantMarkdownHorizontalRules(
@@ -98,4 +99,4 @@ export function resolveChangelogDoc(
     return entry ? prepareDocContent(entry[1]) : undefined;
 }
 
-export { isAdditionalResourcesSlug, isChangelogSlug };
+export { isAdditionalResourcesSlug, isChangelogSlug, isSequenceDiagramDocSlug };

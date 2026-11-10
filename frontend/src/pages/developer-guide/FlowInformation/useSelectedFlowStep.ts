@@ -13,7 +13,8 @@ export function useSelectedFlowStep(
     selectedFlow: string,
     selectedFlowAction: string,
     selectedExampleIndex: number,
-    validationTable: Record<string, ValidationTableAction> | null
+    validationTable: Record<string, ValidationTableAction> | null,
+    apiDocs: Record<string, string> | undefined
 ) {
     const selectedFlowData = flows.find((f) => f.flowId === selectedFlow);
     const steps = selectedFlowData?.config?.steps ?? [];
@@ -28,8 +29,13 @@ export function useSelectedFlowStep(
         !Array.isArray(examplePayload);
 
     const sequenceMermaid = useMemo(
-        () => resolveSequenceMermaid(selectedFlowData, selectedStep),
-        [selectedFlowData, selectedStep]
+        () =>
+            resolveSequenceMermaid(
+                apiDocs,
+                selectedFlowData?.flowId,
+                selectedStep ? getActionId(selectedStep) : undefined
+            ),
+        [apiDocs, selectedFlowData, selectedStep]
     );
 
     const apiForValidations = selectedStep?.api ?? selectedFlowAction;
