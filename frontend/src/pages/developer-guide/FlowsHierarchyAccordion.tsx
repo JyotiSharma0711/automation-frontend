@@ -322,10 +322,28 @@ const FlowsHierarchyAccordion: FC<FlowsHierarchyAccordionProps> = ({
     const [openOptionalGroupId, setOpenOptionalGroupId] = useState<string | null>(null);
 
     const flowsById = useMemo(() => new Map(flows.map((f) => [f.flowId, f])), [flows]);
+    const inlineOwnerByFlowId = useMemo(() => {
+        const map = new Map<string, string>();
+        for (const group of groups) {
+            for (const cfg of getInlineFlowConfigs(group.primary)) {
+                if (flowsById.has(cfg.flow)) {
+                    map.set(cfg.flow, group.primary.flowId);
+                }
+            }
+        }
+        return map;
+    }, [groups, flowsById]);
 
     // Keep the group (and secondary) owning the externally-selected flow expanded.
     useEffect(() => {
         if (!selectedFlow) return;
+
+        const inlineOwnerId = inlineOwnerByFlowId.get(selectedFlow);
+        if (inlineOwnerId) {
+            setOpenGroupId(inlineOwnerId);
+            return;
+        }
+
         for (const group of groups) {
             if (group.primary.flowId === selectedFlow) {
                 setOpenGroupId(group.primary.flowId);
@@ -344,7 +362,7 @@ const FlowsHierarchyAccordion: FC<FlowsHierarchyAccordionProps> = ({
                 return;
             }
         }
-    }, [groups, selectedFlow]);
+    }, [groups, selectedFlow, inlineOwnerByFlowId]);
 
     if (groups.length === 0) return null;
 
