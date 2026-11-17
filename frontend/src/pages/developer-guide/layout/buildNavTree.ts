@@ -3,7 +3,6 @@ import { extractNestedMarkdownToc, stripHeadingNumberPrefix } from "@utils/markd
 import type { BuildEntry, DocMeta } from "../types";
 import {
     groupBuildsByFamily,
-    applyDevGuideBetaDomainScope,
     getDomainDisplayLabel,
     getDomainFamilyLabel,
     getDomainFriendlyName,
@@ -197,7 +196,7 @@ export function buildNavTree(
         };
     }
 
-    const domainFamilies = applyDevGuideBetaDomainScope(groupBuildsByFamily(sortedDomains));
+    const domainFamilies = groupBuildsByFamily(sortedDomains);
     const domainChildren: NavNode[] = domainFamilies.map((family) => {
         const familyEnabled = family.domains.some(isDomainEnabled);
         const familyTitle = getDomainFamilyLabel(family.familyKey);
