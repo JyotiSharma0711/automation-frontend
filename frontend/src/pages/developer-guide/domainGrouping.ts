@@ -1,5 +1,4 @@
 import { DOMAIN_FRIENDLY_NAMES } from "@constants/common";
-import { isDev, isDevGuideEnabled } from "@/types/environment";
 
 import type { BuildEntry } from "./types";
 import { isDomainEnabled } from "./utils";
@@ -124,20 +123,4 @@ export function groupBuildsByFamily(builds: BuildEntry[]): DomainFamilyGroup[] {
             if (aEn !== bEn) return aEn ? -1 : 1;
             return a.label.localeCompare(b.label);
         });
-}
-
-/** Beta release scope for "Explore by Domain": whenever the Developer Guide
- * is enabled (`isDevGuideEnabled`), hides every family except Financial
- * Services, and within it every domain except Credit — applied identically
- * wherever `groupBuildsByFamily`'s output feeds the UI (left sidebar nav
- * tree, the standalone domains page), so both stay in sync from this one
- * place. The development environment (`isDev`) shows every domain. */
-export function applyDevGuideBetaDomainScope(families: DomainFamilyGroup[]): DomainFamilyGroup[] {
-    if (!isDevGuideEnabled || isDev) return families;
-    return families
-        .filter((family) => family.familyKey === "FIS")
-        .map((family) => ({
-            ...family,
-            domains: family.domains.filter((dom) => getDomainFriendlyName(dom.key) === "Credit"),
-        }));
 }
